@@ -1,0 +1,187 @@
+import datetime
+import functools
+from collections import defaultdict as ddict, OrderedDict
+from beancount.core import account as acctops
+from beancount.core.data import Open, Close, Custom, Transaction
+
+def halfcents(d):
+    s = f'{d:,.03f}'
+    if s[-1] == '0':
+        s = s[:-1] + ' '
+    return s
+
+def is_account_account(account):
+    return account.startswith('Assets:') or account.startswith('Liabilities:')
+
+def filter_postings(entries):
+    """A generator that yields only the Postings of Transaction instances.
+
+    Args:
+      entries: A list of directives.
+    Yields:
+      A sorted list of only the Postings of Transaction directives.
+    """
+    for entry in entries:
+        if isinstance(entry, Transaction):
+            for posting in entry.postings:
+                yield entry, posting
+
+# derived from beancount.core.getters.get_account_open_close()
+def get_account_entries(entries):
+    """Fetch the open/close entries for each of the accounts,
+    as well as custom entries for non-account groups.
+
+    If an entry happens to be duplicated, accept the earliest
+    entry (chronologically).
+
+    Args:
+      entries: A list of directive instances.
+    Returns:
+      A map of account name strings to pairs of (open/custom-directive, close-directive)
+      tuples.
+    """
+    # A dict of account name to (open/custom-entry, close-entry).
+    open_close_map = ddict(lambda: [None, None])
+    for entry in entries:
+        if not isinstance(entry, (Open, Close, Custom)):
+            continue
+        if isinstance(entry, Custom):
+            if not entry.type == "group-meta":
+                continue
+            acct = entry.values[0].value
+        else:
+            acct = entry.account
+        open_close = open_close_map[acct]
+        index = 0 if isinstance(entry, (Open, Custom)) else 1
+        previous_entry = open_close[index]
+        if previous_entry is not None:
+            if previous_entry.date <= entry.date:
+                entry = previous_entry
+        open_close[index] = entry
+
+    return dict(open_close_map)
+
+def aname(open_close, a, prefix=''):
+    components = acctops.split(a)
+    start = prefix * (len(components) - 1)
+    if a not in open_close:
+        rest = components[-1]
+    else:
+        rest = open_close[a][0].meta.get('name', components[-1])
+    return start + rest
+
+def isopen(open_close_entry, start, end=None):
+    open, close = open_close_entry
+    assert open is not None
+    if isinstance(start, Period):
+        start = start.asdate()
+    if end is None:
+        end = start + datetime.timedelta(days=1)
+    elif isinstance(end, Period):
+        end = end.asdate()
+    if open.date >= end:
+        return False
+    if close is None:
+        return True
+    if close.date <= start:
+        return False
+    return True
+
+def reverse_parents(a):
+    chain = acctops.split(a)
+    for i in range(len(chain)):
+        yield acctops.join(*chain[:i+1])
+
+def generate_account_order(open_close):
+    ordermap = ddict(lambda: 999999)
+    for a, (o, _) in open_close.items():
+        if 'ordering' in o.meta:
+            ordermap[a] = int(o.meta['ordering'])
+    def account_order(cat):
+        a, _ = cat
+        return tuple(ordermap[chain] for chain in reverse_parents(a))
+    return account_order
+
+def accounts_sorted(open_close, start=None, end=None):
+    account_order = generate_account_order(open_close)
+    cats = open_close.items()
+    if start is not None:
+        cats = filter(lambda cat: isopen(cat[1], start, end), cats)
+    return sorted(cats, key=account_order)
+
+def walk(open_close, root, start=None, end=None):
+    accts = accounts_sorted(open_close, start, end)
+    accts = filter(lambda cat: cat[0].startswith(root), accts)
+    seen = set()
+    for a, (o, _) in accts:
+        for parent in reverse_parents(acctops.parent(a)):
+            if parent not in seen:
+                seen.add(parent)
+                yield parent, None
+        seen.add(a)
+        yield a, o
+
+def tree(open_close, start=None, end=None):
+    accts = accounts_sorted(open_close, start, end)
+    seen = set()
+    tree = dict()
+    for a, (o, _) in accts:
+        subtree = tree
+        for parent in reverse_parents(acctops.parent(a)):
+            subtree = subtree.setdefault(parent, (None, OrderedDict()))[1]
+            if parent not in seen:
+                seen.add(parent)
+        subtree[a] = (o, OrderedDict())
+    return tree
+
+@functools.total_ordering
+class Period:
+    def __init__(self, year, month):
+        self.year = year
+        self.month = month
+        self._date = datetime.date(year, month, 1)
+
+    @staticmethod
+    def from_str(s):
+        year, month = (int(n) for n in s.split('-'))
+        return Period(year, month)
+
+    @staticmethod
+    def from_date(date):
+        return Period(date.year, date.month)
+
+    @staticmethod
+    def from_canonical(canon):
+        year, month0 = divmod(canon, 12)
+        return Period(year, month0 + 1)
+
+    def __hash__(self):
+        return hash((self.year, self.month))
+
+    def __str__(self):
+        return f'{self.year:04}-{self.month:02}'
+
+    def __repr__(self):
+        return f'Period({self.year}, {self.month})'
+
+    def __eq__(self, o):
+        if not isinstance(o, Period):
+            return NotImplemented
+        return (self.year, self.month) == (o.year, o.month)
+
+    def __gt__(self, o):
+        if not isinstance(o, Period):
+            return NotImplemented
+        return (self.year, self.month) > (o.year, o.month)
+
+    def canonical(self):
+        return self.year * 12 + self.month - 1
+
+    def asdate(self):
+        return self._date
+
+    def add(self, months):
+        return Period.from_canonical(self.canonical() + months)
+
+    def sub(self, months):
+        return self.add(-months)

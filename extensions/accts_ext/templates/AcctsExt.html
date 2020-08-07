@@ -1,0 +1,116 @@
+{% import 'macros/_account_macros.html' as account_macros with context %}
+{% import "_charts.html" as charts with context %}
+
+<style>
+.tree-table .balance.negative {
+  color: var(--color-budget-negative);
+  font-weight: bold;
+}
+
+.tree-table .balance.positive {
+  color: var(--color-budget-positive);
+  font-weight: bold;
+}
+
+.tree-table .available {
+  border-radius: 25px;
+}
+
+.tree-table .available.negative {
+  padding-left: 0.7em;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  background-color: var(--color-budget-negative);
+  color: white;
+  font-weight: bold;
+}
+
+.tree-table .available.positive {
+  padding-left: 0.7em;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  background-color: var(--color-budget-positive);
+  color: white;
+  font-weight: bold;
+}
+</style>
+
+{% set roots = extension.make_table() %}
+{% set wrows = extension.wrows %}
+{% set crows = extension.crows %}
+{% set trows = extension.trows %}
+
+{{ charts.net_worth(g.interval) }}
+{{ charts.hierarchy(ledger.options['name_assets']) }}
+{{ charts.hierarchy(ledger.options['name_liabilities']) }}
+<script type="application/json" id="chart-data">{{ charts.chart_data|tojson|safe }}</script>
+
+<div class="row">{% for root in roots %}<div class="column">
+    <ol is="tree-table" class="flex-table tree-table">
+        <li class="head">
+            <p>
+            <span class="account-cell"><button type="button" class="link expand-all hidden" title="{{ _('Expand all accounts') }}">{{ _('Expand all') }}</button></span>
+            <span class="num">Working</span>
+            <span class="num">Cleared</span>
+            <span class="num">Total</span>
+            </p>
+        </li>
+{% for account in [root] if extension._is_open(account) recursive %}
+    <li{{ ' class=toggled' if account.account|collapse_account else '' }}>
+        <p>
+        <span class="account-cell depth-{{ loop.depth0 }} droptarget
+        {{- '' if not account|length else ' has-children'}}
+        " data-account-name="{{ account.account }}">
+            {% if account|length %}<span class="expander"></span>{% endif %}
+            <a href="{{ url_for('extension_report', report_name='JournalExt', account_name=account.account) }}" class="account">
+              {{ extension._name(account) }}
+            </a>
+            </span>
+            {% set working = extension._row(wrows, account) %}
+            {% set cleared = extension._row(crows, account) %}
+            {% set total = extension._row(trows, account) %}
+            <span class="num {{ 'has-balance' if working else '' }}">
+              <span class="balance {{ 'negative' if working < 0 else 'positive' if working > 0 else '' }}">
+                <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
+                  {{ working | format_currency("USD") }}
+                <!-- </a> -->
+              </span>
+              <span class="balance-children">
+                <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
+                  {{ extension._row_children(wrows, account) | format_currency("USD", show_if_zero=True) }}
+                <!-- </a> -->
+              </span>
+            </span>
+            <span class="num {{ 'has-balance' if cleared else '' }}">
+              <span class="balance {{ 'negative' if cleared < 0 else 'positive' if cleared > 0 else '' }}">
+                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
+                  {{ cleared | format_currency("USD") }}
+                <!-- </a> -->
+              </span>
+              <span class="balance-children">
+                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
+                  {{ extension._row_children(crows, account) | format_currency("USD", show_if_zero=True) }}
+                <!-- </a> -->
+              </span>
+            </span>
+            <span class="num {{ 'has-balance' if total else '' }}">
+              <span class="balance {{ 'negative' if total < 0 else 'positive' if total > 0 else '' }}">
+                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
+                  {{ total | format_currency("USD") }}
+                <!-- </a> -->
+              </span>
+              <span class="balance-children">
+                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
+                  {{ extension._row_children(trows, account) | format_currency("USD", show_if_zero=True) }}
+                <!-- </a> -->
+              </span>
+            </span>
+    </p>
+    <ol>
+    {{ loop(extension._sort_subtree(account)) }}
+    </ol>
+    </li>
+{% endfor %}
+</div>{% endfor %}</div>
+    </ol>
+    <br />
