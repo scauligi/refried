@@ -1,10 +1,5 @@
-"""!! GPL3 !!"""
-"""!! GPL3 !!"""
-"""!! GPL3 !!"""
-"""Beancount plugin to implement per-posting effective dates. Modified from redstreet/beancount_reds_plugins on github, under GPL3"""
-"""!! GPL3 !!"""
-"""!! GPL3 !!"""
-"""!! GPL3 !!"""
+"""Beancount plugin to implement per-posting effective dates.
+Modified from https://github.com/redstreet/beancount_reds_plugins, under GPL3"""
 
 import collections
 from beancount.core.amount import ZERO
