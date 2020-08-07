@@ -3,9 +3,10 @@
 A collection of plugins and scripts for
 [beancount](https://github.com/beancount/beancount) and
 [fava](https://github.com/beancount/fava) for monthly budgeting.
-Inspired by [You Need a Budget](https://www.youneedabudget.com).
+Budgeting-related plugins inspired by
+[You Need a Budget](https://www.youneedabudget.com).
 
-Some plugins may require features found in
+Some plugins may benefit from or require features found in
 [my fork of beancount](https://github.com/scauligi/beancount).
 
 ## Installation
