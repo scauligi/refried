@@ -12,12 +12,12 @@ plugin "refried.plugins.rebudget"
 2020-01-01 custom "fava-extension" "refried.extensions.avail_ext"
 ```
 
-This will add a new report "AvailExt" to fava. The `rebudget` plugin is
+This will add a new report "Budget" to fava. The `rebudget` plugin is
 required for it to function properly.
 
 ## Usage
 
-The AvailExt extension will display all of your Income and Expense accounts, by month.
+The "Budget" extension will display all of your Income and Expense accounts, by month.
 In the style of YNAB, each account has three columns: "Budgeted", "Spent", and "Available".
 
 Normal transactions will show up under the "Spent" columns of their respective Expense accounts.
