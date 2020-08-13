@@ -23,28 +23,27 @@ Then clone this repository into the same directory as your beancount file:
 git clone https://github.com/scauligi/refried.git
 ```
 
-## Usage
+## Quick start
 
-### Beancount plugins
+Enable the `rebudget` beancount plugin and the `avail_ext` fava extension
+by adding the following lines to your beancount file:
 
-TODO
+```
+plugin "refried.plugins.rebudget"
+2020-01-01 custom "fava-extension" "refried.extensions.avail_ext"
+```
 
-### Fava extensions
-
-TODO
-
-### Other notes
-
-TODO e.g. the `Period` class
+This will add a new report "AvailExt" to fava. The `rebudget` plugin is
+required for it to function properly.
 
 ## Conventions
 
-Many of the plugins allow you to specify more user friendly names by using a
+The fava extensions allow you to specify more user friendly names by using a
 `name: <str>` metadata on an account's `open` directive.
 You can also influence the ordering of displayed accounts using an `ordering:
 <number>` metadata on an account's `open` directive.
 
-Many of the plugins may currently make assumptions about currency (USD) and
+Some of the plugins/extensions may currently make assumptions about currency (USD) and
 various account names.
 
 ## Attribution
