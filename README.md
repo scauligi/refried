@@ -6,9 +6,6 @@ A collection of plugins and scripts for
 Budgeting-related plugins inspired by
 [You Need a Budget](https://www.youneedabudget.com).
 
-Some plugins may benefit from or require features found in
-[my fork of beancount](https://github.com/scauligi/beancount).
-
 ## Installation
 
 Make sure the following option is set in your beancount file:
@@ -36,12 +33,15 @@ plugin "refried.plugins.rebudget"
 This will add a new report "AvailExt" to fava. The `rebudget` plugin is
 required for it to function properly.
 
-## Conventions
+See the document on [YNAB-style budgeting](budgeting.md) for details.
+
+## Customization
 
 The fava extensions allow you to specify more user friendly names by using a
 `name: <str>` metadata on an account's `open` directive.
 You can also influence the ordering of displayed accounts using an `ordering:
-<number>` metadata on an account's `open` directive.
+<number>` metadata on an account's `open` directive if you don't want the
+default alphabetic ordering.
 
 Some of the plugins/extensions may currently make assumptions about currency (USD) and
 various account names.
