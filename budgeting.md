@@ -52,3 +52,7 @@ Understandably, this will wreak havoc with your (non-budgeting) expense reports.
 For any transaction that don't involve an Assets or Liabilities account, such as the ones above, the `rebudget` plugin will
 automatically apply the tag `#rebudget`. So by filtering out the `#rebudget` tag you will have the correct data to use for your usual reports!
 (In fava you can use the search filter `-#rebudget`.)
+
+## YNAB-style account views
+
+If you also want YNAB-style account views with "Working" vs "Cleared" totals and cleared vs uncleared postings, see the [YNAB-style account views](clearing.md) document.
