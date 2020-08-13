@@ -30,7 +30,7 @@ plugin "refried.plugins.rebudget"
 2020-01-01 custom "fava-extension" "refried.extensions.avail_ext"
 ```
 
-This will add a new report "AvailExt" to fava. The `rebudget` plugin is
+This will add a new report "Budget" to fava. The `rebudget` plugin is
 required for it to function properly.
 
 See the document on [YNAB-style budgeting](budgeting.md) for details.
