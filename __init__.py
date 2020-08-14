@@ -7,7 +7,7 @@ from beancount.core.data import Open, Close, Custom, Transaction
 def halfcents(d):
     s = f'{d:,.03f}'
     if s[-1] == '0':
-        s = s[:-1] + ' '
+        s = s[:-1]
     return s
 
 def is_account_account(account):
