@@ -6,7 +6,6 @@ from beancount import loader
 import sys
 from os.path import dirname, realpath
 sys.path.insert(0, dirname(dirname(dirname(realpath(sys.argv[0])))))
-print(0, dirname(dirname(dirname(realpath(sys.argv[0])))))
 
 class TestRebudget(cmptest.TestCase):
 
