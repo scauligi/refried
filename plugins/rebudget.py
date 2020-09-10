@@ -1,7 +1,7 @@
 import collections
 from refried import is_account_account
 from beancount.core import convert
-from beancount.core.data import Transaction, filter_txns
+from beancount.core.data import Open, Transaction, filter_txns
 from beancount.core.inventory import Inventory
 
 __plugins__ = ('rebudget', 'balance_check')
@@ -22,13 +22,18 @@ def rebudget(entries, options_map):
 
 def balance_check(entries, options_map):
     errors = []
+    tracking_accounts = set()
+    for entry in entries:
+        if isinstance(entry, Open):
+            if entry.meta.get('tracking', False):
+                tracking_accounts.add(entry.account)
     asum = Inventory()
     bsum = Inventory()
     for entry in filter_txns(entries):
         for posting in entry.postings:
-            components = posting.account.split(':')
-            if components[1] == 'Tracking':
+            if posting.account in tracking_accounts:
                 continue
+            components = posting.account.split(':')
             if components[0] in ('Assets', 'Liabilities'):
                 asum.add_position(posting)
             elif components[0] in ('Income', 'Expenses'):
