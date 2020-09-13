@@ -14,6 +14,14 @@ Install this plugin from PyPI:
 pip install beancount-refried
 ```
 
+Alternatively, if you want to be able to edit the plugins locally,
+you can clone this repository then run the following from within
+the root of the repository:
+
+```bash
+pip install -e .
+```
+
 ## Quick start
 
 Enable the `rebudget` beancount plugin and the `avail_ext` fava extension
