@@ -1,5 +1,5 @@
 Metadata-Version: 2.1
-Name: refried
+Name: beancount-refried
 Version: 0.1.0
 Summary: A collection of plugins and scripts for beancount and fava for monthly budgeting.
 Home-page: https://github.com/scauligi/refried
