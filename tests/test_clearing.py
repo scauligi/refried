@@ -4,11 +4,7 @@ from beancount.core.data import Transaction
 from beancount.parser import cmptest
 from beancount import loader
 
-import test_utils
-
-import sys
-from os.path import dirname, realpath
-sys.path.insert(0, dirname(dirname(dirname(realpath(sys.argv[0])))))
+from . import test_utils
 
 def _underscore_cleared_posting(p):
     if 'cleared' in p.meta:

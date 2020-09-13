@@ -1,6 +1,6 @@
 import unittest
 import datetime
-from __init__ import Period
+from refried import Period
 
 class TestPeriod(unittest.TestCase):
     def test_add0(self):

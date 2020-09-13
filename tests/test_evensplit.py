@@ -4,11 +4,7 @@ from beancount.parser import cmptest
 from beancount import loader
 from beancount.utils import test_utils
 
-import test_utils
-
-import sys
-from os.path import dirname, realpath
-sys.path.insert(0, dirname(dirname(dirname(realpath(sys.argv[0])))))
+from . import test_utils
 
 class TestEvensplit(test_utils.TestCase):
 

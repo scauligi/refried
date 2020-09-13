@@ -5,6 +5,8 @@ from beancount import loader
 from beancount.core import account as acctops
 from beancount.core.data import Open, Close, Custom, Transaction
 
+__version__ = '0.1.0'
+
 def halfcents(d):
     s = f'{d:,.03f}'
     if s[-1] == '0':

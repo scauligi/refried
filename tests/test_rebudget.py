@@ -3,10 +3,6 @@ import unittest
 from beancount.parser import cmptest
 from beancount import loader
 
-import sys
-from os.path import dirname, realpath
-sys.path.insert(0, dirname(dirname(dirname(realpath(sys.argv[0])))))
-
 class TestRebudget(cmptest.TestCase):
 
     @loader.load_doc(expect_errors=False)
