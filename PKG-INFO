@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: beancount-refried
-Version: 0.1.0
+Version: 0.1.1
 Summary: A collection of plugins and scripts for beancount and fava for monthly budgeting.
 Home-page: https://github.com/scauligi/refried
 License: GPL-3.0-or-later
@@ -22,16 +22,10 @@ Budgeting-related plugins inspired by
 
 ## Installation
 
-Make sure the following option is set in your beancount file:
-
-```
-option "insert_pythonpath" "TRUE"
-```
-
-Then clone this repository into the same directory as your beancount file:
+Install this plugin from PyPI:
 
 ```bash
-git clone https://github.com/scauligi/refried.git
+pip install beancount-refried
 ```
 
 ## Quick start
