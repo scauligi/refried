@@ -8,16 +8,10 @@ Budgeting-related plugins inspired by
 
 ## Installation
 
-Make sure the following option is set in your beancount file:
-
-```
-option "insert_pythonpath" "TRUE"
-```
-
-Then clone this repository into the same directory as your beancount file:
+Install this plugin from PyPI:
 
 ```bash
-git clone https://github.com/scauligi/refried.git
+pip install beancount-refried
 ```
 
 ## Quick start
