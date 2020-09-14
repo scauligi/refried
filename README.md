@@ -51,4 +51,4 @@ various account names.
 ## Attribution
 
 refried includes content based off of files from
-https://github.com/redstreet/beancount_reds_plugins, licenced under GPL3.
+https://github.com/redstreet/beancount_reds_plugins, licensed under GPL3.
