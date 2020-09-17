@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "beancount-refried"
-version = "0.2.0"
+version = "0.2.1"
 description = "A collection of plugins and scripts for beancount and fava for monthly budgeting."
 license = "GPL-3.0-or-later"
 authors = ["scauligi"]
@@ -12,7 +12,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
