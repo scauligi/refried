@@ -2,7 +2,7 @@ import datetime
 import functools
 from collections import defaultdict as ddict, OrderedDict
 from beancount import loader
-from beancount.core import account as acctops
+from beancount.core import account as acctops, data
 from beancount.core.data import Open, Close, Custom, Transaction
 
 __version__ = '0.1.1'
@@ -18,13 +18,15 @@ def is_account_account(account):
 
 def load_file_including_futures(filename, log_errors=None):
     entries, errors, options = loader.load_file(filename, log_errors=log_errors)
-    future_entries = []
+
     for entry in entries:
         if isinstance(entry, Custom):
             if entry.type == 'refried-future':
                 future_file = entry.values[0].value
                 future_entries, *_ = loader.load_file(future_file)
                 entries.extend(future_entries)
+    entries.sort(key=data.entry_sortkey)
+
     return entries, errors, options
 
 def filter_postings(entries):
