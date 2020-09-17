@@ -16,9 +16,9 @@ package_data = \
 
 setup_kwargs = {
     'name': 'beancount-refried',
-    'version': '0.1.1',
+    'version': '0.2.0',
     'description': 'A collection of plugins and scripts for beancount and fava for monthly budgeting.',
-    'long_description': '# refried\n\nA collection of plugins and scripts for\n[beancount](https://github.com/beancount/beancount) and\n[fava](https://github.com/beancount/fava) for monthly budgeting.\nBudgeting-related plugins inspired by\n[You Need a Budget](https://www.youneedabudget.com).\n\n## Installation\n\nInstall this plugin from PyPI:\n\n```bash\npip install beancount-refried\n```\n\n## Quick start\n\nEnable the `rebudget` beancount plugin and the `avail_ext` fava extension\nby adding the following lines to your beancount file:\n\n```\nplugin "refried.plugins.rebudget"\n2020-01-01 custom "fava-extension" "refried.extensions.avail_ext"\n```\n\nThis will add a new report "Budget" to fava. The `rebudget` plugin is\nrequired for it to function properly.\n\nSee the document on [YNAB-style budgeting](budgeting.md) for details.\n\n## Customization\n\nThe fava extensions allow you to specify more user friendly names by using a\n`name: <str>` metadata on an account\'s `open` directive.\nYou can also influence the ordering of displayed accounts using an `ordering:\n<number>` metadata on an account\'s `open` directive if you don\'t want the\ndefault alphabetic ordering.\n\nSome of the plugins/extensions may currently make assumptions about currency (USD) and\nvarious account names.\n\n## Attribution\n\nrefried includes content based off of files from\nhttps://github.com/redstreet/beancount_reds_plugins, licenced under GPL3.\n',
+    'long_description': '# refried\n\nA collection of plugins and scripts for\n[beancount](https://github.com/beancount/beancount) and\n[fava](https://github.com/beancount/fava) for monthly budgeting.\nBudgeting-related plugins inspired by\n[You Need a Budget](https://www.youneedabudget.com).\n\n## Installation\n\nInstall this plugin from PyPI:\n\n```bash\npip install beancount-refried\n```\n\nAlternatively, if you want to be able to edit the plugins locally,\nyou can clone this repository then run the following from within\nthe root of the repository:\n\n```bash\npip install -e .\n```\n\n## Quick start\n\nEnable the `rebudget` beancount plugin and the `avail_ext` fava extension\nby adding the following lines to your beancount file:\n\n```\nplugin "refried.plugins.rebudget"\n2020-01-01 custom "fava-extension" "refried.extensions.avail_ext"\n```\n\nThis will add a new report "Budget" to fava. The `rebudget` plugin is\nrequired for it to function properly.\n\nSee the document on [YNAB-style budgeting](budgeting.md) for details.\n\n## Customization\n\nThe fava extensions allow you to specify more user friendly names by using a\n`name: <str>` metadata on an account\'s `open` directive.\nYou can also influence the ordering of displayed accounts using an `ordering:\n<number>` metadata on an account\'s `open` directive if you don\'t want the\ndefault alphabetic ordering.\n\nSome of the plugins/extensions may currently make assumptions about currency (USD) and\nvarious account names.\n\n## Attribution\n\nrefried includes content based off of files from\nhttps://github.com/redstreet/beancount_reds_plugins, licensed under GPL3.\n',
     'author': 'scauligi',
     'author_email': None,
     'maintainer': None,
@@ -26,7 +26,7 @@ setup_kwargs = {
     'url': 'https://github.com/scauligi/refried',
     'packages': packages,
     'package_data': package_data,
-    'python_requires': '>=3.8,<4.0',
+    'python_requires': '>=3.7,<4.0',
 }
 
 
