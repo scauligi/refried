@@ -59,19 +59,10 @@ def build_config(config):
         if DEBUG:
             print("Using default config")
         holding_accts = {
-            'Expenses': {
-                'earlier': 'Equity:Hold:Expenses$',
-                'later':   'Equity:Hold:Expenses$' },
-            'Income': {
-                'earlier': 'Income:To-Be-Budgeted:Past-Budgeted$',
-                'later':   'Income:To-Be-Budgeted:Future-Budgeted$' },
-            'Assets': {
-                'earlier': 'Equity:Hold:Assets',
-                'later':   'Equity:Hold:Assets' } }
-        # holding_accts = {
-        #         'Expenses': {'earlier': 'Liabilities:Hold:Expenses', 'later': 'Assets:Hold:Expenses'},
-        #         'Income':   {'earlier': 'Assets:Hold:Income', 'later': 'Liabilities:Hold:Income'},
-        #         }
+            'Expenses': 'Equity:Hold:Expenses',
+            'Income':   'Income:To-Be-Budgeted:Future-Budgeted',
+            'Assets':   'Equity:Hold:Assets',
+        }
     return holding_accts
 
 def effective_date(entries, options_map, config=None):
@@ -100,12 +91,6 @@ def effective_date(entries, options_map, config=None):
         else:
             filtered_entries.append(entry)
 
-    # if DEBUG:
-    #     print("------")
-    #     for e in interesting_entries:
-    #         printer.print_entry(e)
-    #     print("------")
-    
     # add a link to each effective date entry. this gets copied over to the newly created effective date
     # entries, and thus links each set of effective date entries
     interesting_entries_linked = []
@@ -146,16 +131,9 @@ def effective_date(entries, options_map, config=None):
                     units_list[i] = posting.units._replace(number=units_list[i])
 
                 for new_date, units in zip(new_dates, units_list):
-                    # find earlier or later (is this necessary?)
-                    holding_account = holding_accts[found_acct]['earlier']
-                    if new_date > entry.date:
-                        holding_account = holding_accts[found_acct]['later']
+                    new_acct_name = holding_accts[found_acct]
 
                     # Replace posting in original entry with holding account
-                    if holding_account.endswith('$'):
-                        new_acct_name = holding_account[:-1]
-                    else:
-                        new_acct_name = posting.account.replace(found_acct, holding_account)
                     clean_meta = copy.deepcopy(posting.meta)
                     clean_meta['effective_date'] = new_date
                     new_posting = posting._replace(account=new_acct_name, units=units, meta=clean_meta)
