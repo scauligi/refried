@@ -26,6 +26,9 @@ def clearing(entries, options_map):
                 if 'uncleared' in posting.meta:
                     del posting.meta['uncleared']
                     cleared = False
+                elif posting.account not in cleardates:
+                    # account doesn't have a corresponding Open directive!
+                    continue
                 elif (autoclears[posting.account]) or \
                         (cleardates[posting.account] and \
                          entry.date < cleardates[posting.account]):
