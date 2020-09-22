@@ -24,7 +24,7 @@ Normal transactions will show up under the "Spent" columns of their respective E
 No need to do anything special!
 
 To (re)budget between Expense accounts, simply create a new transaction transferring money
-between Income/Expense accounts. Due to the nature of double-entry bookkeeping, note that the signs
+between Income/Expense accounts. Due to the nature of double-entry bookkeeping, the signs
 will be the opposite of what you might expect!
 
 For example, suppose you have $3000 in unbudgeted income and you want to fill out your budget for the upcoming month:
