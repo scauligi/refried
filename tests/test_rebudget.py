@@ -3,6 +3,8 @@ import unittest
 from beancount.parser import cmptest
 from beancount import loader
 
+import refried
+
 class TestRebudget(cmptest.TestCase):
 
     @loader.load_doc(expect_errors=False)
@@ -110,3 +112,41 @@ class TestRebudget(cmptest.TestCase):
                 Expenses:Dining-Out   -20 USD
                 Equity:Something       20 USD
         """, entries)
+
+    @loader.load_doc(expect_errors=True)
+    def test_tracking_mismatch(self, entries, errors, options):
+        """
+            plugin "refried.plugins.rebudget"
+
+            2020-09-21 open Assets:Cash
+            2020-09-21 open Assets:IRA
+                tracking: TRUE
+
+            2020-09-21 *
+                Assets:Cash    -20 USD
+                Assets:IRA      20 USD
+        """
+        self.assertEqual(len(errors), 1)
+        self.assertIsInstance(errors[0], refried.plugins.rebudget.BudgetBalanceError)
+
+    @loader.load_doc(expect_errors=False)
+    def test_tracking_ok(self, entries, errors, options):
+        """
+            plugin "refried.plugins.rebudget"
+
+            2020-09-21 open Assets:Cash
+            2020-09-21 open Assets:IRA
+                tracking: TRUE
+            2020-09-21 open Expenses:Money-for-IRA
+            2020-09-21 open Income:Tracking
+                tracking: TRUE
+
+            2020-09-21 *
+                Assets:Cash       -20 USD
+                Assets:IRA         20 USD
+
+            2020-09-21 *
+                Income:Tracking         -20 USD
+                Expenses:Money-for-IRA   20 USD
+        """
+        pass

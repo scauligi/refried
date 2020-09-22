@@ -30,12 +30,12 @@ def load_file_including_futures(filename, log_errors=None):
     return entries, errors, options
 
 def filter_postings(entries):
-    """A generator that yields only the Postings of Transaction instances.
+    """A generator that yields the Postings of Transaction instances in a general list of entries.
 
     Args:
       entries: A list of directives.
     Yields:
-      A sorted list of only the Postings of Transaction directives.
+      A tuple (Transaction, Posting) for each posting in each transaction.
     """
     for entry in entries:
         if isinstance(entry, Transaction):
@@ -78,6 +78,17 @@ def get_account_entries(entries):
     return dict(open_close_map)
 
 def aname(open_close, a, prefix=''):
+    """Retrieve a name for an account/group.
+    If the account/group has an associated `name:` metadata
+    then return that, else return the final component of the account string.
+
+    Args:
+      open_close: The dictionary returned from `refried.get_account_entries()`.
+      a: The account/group string.
+      prefix: A string to use for tree-like nesting/indentation.
+    Returns:
+      The associated name for the account.
+    """
     components = acctops.split(a)
     start = prefix * (len(components) - 1)
     if a not in open_close:
@@ -87,6 +98,16 @@ def aname(open_close, a, prefix=''):
     return start + rest
 
 def isopen(open_close_entry, start, end=None):
+    """A predicate for whether an account is open during a given time frame.
+
+    Args:
+      open_close_entry: The value associated with an account's key in the dictionary
+        returned from `refried.get_account_entries()`.
+      start: A `datetime.date` or `Period` for the start of the time frame (inclusive).
+      end: An optional `datetime.date` or `Period` for the end of the time frame (exclusive).
+    Returns:
+      `True` if the account is open and not closed during any date within the time frame.
+    """
     open, close = open_close_entry
     assert open is not None
     if isinstance(start, Period):
@@ -103,34 +124,45 @@ def isopen(open_close_entry, start, end=None):
         return False
     return True
 
-def reverse_parents(a):
+def _reverse_parents(a):
     chain = acctops.split(a)
     for i in range(len(chain)):
         yield acctops.join(*chain[:i+1])
 
-def generate_account_order(open_close):
+def _generate_account_order(open_close):
     ordermap = ddict(lambda: 999999)
     for a, (o, _) in open_close.items():
         if 'ordering' in o.meta:
             ordermap[a] = int(o.meta['ordering'])
     def account_order(cat):
         a, _ = cat
-        return tuple(ordermap[chain] for chain in reverse_parents(a))
+        return tuple(ordermap[chain] for chain in _reverse_parents(a))
     return account_order
 
-def accounts_sorted(open_close, start=None, end=None):
-    account_order = generate_account_order(open_close)
+def _accounts_sorted(open_close, start=None, end=None):
+    account_order = _generate_account_order(open_close)
     cats = open_close.items()
     if start is not None:
         cats = filter(lambda cat: isopen(cat[1], start, end), cats)
     return sorted(cats, key=account_order)
 
 def walk(open_close, root, start=None, end=None):
-    accts = accounts_sorted(open_close, start, end)
+    """A generator that yields accounts/groups in preorder... order.
+    Respects `ordering:` metadata, otherwise asciibetic by account name.
+
+    Args:
+      open_close: The dictionary returned from `refried.get_account_entries()`.
+      root: The account string of the root node to start from.
+      start: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
+      end: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
+    Yields:
+      Tuples (account string, Open/Custom directive) in preorder traversal.
+    """
+    accts = _accounts_sorted(open_close, start, end)
     accts = filter(lambda cat: cat[0].startswith(root), accts)
     seen = set()
     for a, (o, _) in accts:
-        for parent in reverse_parents(acctops.parent(a)):
+        for parent in _reverse_parents(acctops.parent(a)):
             if parent not in seen:
                 seen.add(parent)
                 yield parent, None
@@ -138,12 +170,22 @@ def walk(open_close, root, start=None, end=None):
         yield a, o
 
 def tree(open_close, start=None, end=None):
-    accts = accounts_sorted(open_close, start, end)
+    """Creates a tree (using `dict`s) of account/groups.
+    Respects `ordering:` metadata, otherwise asciibetic by account name.
+
+    Args:
+      open_close: The dictionary returned from `refried.get_account_entries()`.
+      start: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
+      end: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
+    Returns:
+      A recursive `dict` of account string -> (Open/Custom directive, subtree of children).
+    """
+    accts = _accounts_sorted(open_close, start, end)
     seen = set()
     tree = dict()
     for a, (o, _) in accts:
         subtree = tree
-        for parent in reverse_parents(acctops.parent(a)):
+        for parent in _reverse_parents(acctops.parent(a)):
             subtree = subtree.setdefault(parent, (None, OrderedDict()))[1]
             if parent not in seen:
                 seen.add(parent)
@@ -152,6 +194,7 @@ def tree(open_close, start=None, end=None):
 
 @functools.total_ordering
 class Period:
+    """Useful class for working with month-based timeframes."""
     def __init__(self, year, month):
         self.year = year
         self.month = month
@@ -159,15 +202,18 @@ class Period:
 
     @staticmethod
     def from_str(s):
+        """Expects string in the form "{year}-{month}"."""
         year, month = (int(n) for n in s.split('-'))
         return Period(year, month)
 
     @staticmethod
     def from_date(date):
+        """Takes year and month from a `datetime.date`."""
         return Period(date.year, date.month)
 
     @staticmethod
     def from_canonical(canon):
+        """Converts from a canonical `int` representation."""
         year, month0 = divmod(canon, 12)
         return Period(year, month0 + 1)
 
@@ -191,13 +237,17 @@ class Period:
         return (self.year, self.month) > (o.year, o.month)
 
     def canonical(self):
+        """Converts to a canonical `int` representation."""
         return self.year * 12 + self.month - 1
 
     def asdate(self):
+        """Creates a `datetime.date` for the first date in this period."""
         return self._date
 
     def add(self, months):
+        """Returns a new `Period` advanced by a number of months."""
         return Period.from_canonical(self.canonical() + months)
 
     def sub(self, months):
+        """Returns a new `Period` regressed by a number of months."""
         return self.add(-months)
