@@ -35,7 +35,7 @@ plugin "refried.plugins.rebudget"
 This will add a new report "Budget" to fava. The `rebudget` plugin is
 required for it to function properly.
 
-See the document on [YNAB-style budgeting](budgeting.md) for details.
+See the document on [YNAB-style budgeting](docs/budgeting.md) for details.
 
 ## Customization
 
