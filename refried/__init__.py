@@ -16,17 +16,12 @@ def halfcents(d):
 def is_account_account(account):
     return account.startswith('Assets:') or account.startswith('Liabilities:')
 
-def load_file_including_futures(filename, log_errors=None):
-    entries, errors, options = loader.load_file(filename, log_errors=log_errors)
-
-    for entry in entries:
-        if isinstance(entry, Custom):
-            if entry.type == 'refried-future':
-                future_file = entry.values[0].value
-                future_entries, *_ = loader.load_file(future_file)
-                entries.extend(future_entries)
-    entries.sort(key=data.entry_sortkey)
-
+def load_file(*args, futures=False, **kwargs):
+    entries, errors, options = loader.load_file(*args, **kwargs)
+    if not futures:
+        culled_entries = [entry for entry in entries
+                          if (not isinstance(entry, Transaction)) or ('future' not in entry.tags)]
+        entries = culled_entries
     return entries, errors, options
 
 def filter_postings(entries):
