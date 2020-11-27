@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: beancount-refried
-Version: 0.2.1
+Version: 0.3.0
 Summary: A collection of plugins and scripts for beancount and fava for monthly budgeting.
 Home-page: https://github.com/scauligi/refried
 License: GPL-3.0-or-later
@@ -51,7 +51,7 @@ plugin "refried.plugins.rebudget"
 This will add a new report "Budget" to fava. The `rebudget` plugin is
 required for it to function properly.
 
-See the document on [YNAB-style budgeting](budgeting.md) for details.
+See the document on [YNAB-style budgeting](docs/budgeting.md) for details.
 
 ## Customization
 
