@@ -100,7 +100,7 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
         return "{} {}\xa0".format(num, currency)
 
     def _ordering(self, a):
-        return self.ledger.accounts[a.account].meta.get('ordering', 9999)
+        return [int(x) for x in str(self.ledger.accounts[a.account].meta.get('ordering', ["999999"])).split('.')]
 
     def _name(self, a):
         meta = self.ledger.accounts[a.account].meta

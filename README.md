@@ -41,9 +41,13 @@ See the document on [YNAB-style budgeting](docs/budgeting.md) for details.
 
 The fava extensions allow you to specify more user friendly names by using a
 `name: <str>` metadata on an account's `open` directive.
+
 You can also influence the ordering of displayed accounts using an `ordering:
 <number>` metadata on an account's `open` directive if you don't want the
 default alphabetic ordering.
+You can also use Decimals or strings of the form "<number>.<number>.<number>..."
+to easily insert new accounts between two adjacent accounts.
+For example, "23.64.2" would be ordered between "23.64" and "23.65".
 
 Some of the plugins/extensions may currently make assumptions about currency (USD) and
 various account names.
