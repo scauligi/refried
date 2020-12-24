@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: beancount-refried
-Version: 0.3.0
+Version: 0.4.0
 Summary: A collection of plugins and scripts for beancount and fava for monthly budgeting.
 Home-page: https://github.com/scauligi/refried
 License: GPL-3.0-or-later
@@ -11,6 +11,7 @@ Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
 Project-URL: Repository, https://github.com/scauligi/refried
 Description-Content-Type: text/markdown
 
@@ -57,9 +58,13 @@ See the document on [YNAB-style budgeting](docs/budgeting.md) for details.
 
 The fava extensions allow you to specify more user friendly names by using a
 `name: <str>` metadata on an account's `open` directive.
+
 You can also influence the ordering of displayed accounts using an `ordering:
 <number>` metadata on an account's `open` directive if you don't want the
 default alphabetic ordering.
+You can also use Decimals or strings of the form "<number>.<number>.<number>..."
+to easily insert new accounts between two adjacent accounts.
+For example, "23.64.2" would be ordered between "23.64" and "23.65".
 
 Some of the plugins/extensions may currently make assumptions about currency (USD) and
 various account names.
