@@ -15,6 +15,8 @@ from fava.core.tree import Tree
 from fava.ext import FavaExtensionBase
 from fava.template_filters import cost_or_value
 
+from refried import _reverse_parents
+
 import datetime
 
 
@@ -51,7 +53,10 @@ class AcctsExt(FavaExtensionBase):  # pragma: no cover
         return [cash, credit]
 
     def _ordering(self, a):
-        return [int(x) for x in str(self.ledger.accounts[a.account].meta.get('ordering', ["999999"])).split('.')]
+        def _ordermap(a):
+            meta = self.ledger.accounts[a].meta
+            return tuple(map(int, str(meta.get('ordering', 999999)).split('.')))
+        return tuple(map(_ordermap, _reverse_parents(a.account)))
 
     def _name(self, a):
         meta = self.ledger.accounts[a.account].meta

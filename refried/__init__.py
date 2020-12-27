@@ -5,7 +5,7 @@ from beancount import loader
 from beancount.core import account as acctops, data
 from beancount.core.data import Open, Close, Custom, Transaction
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 def halfcents(d):
     s = f'{d:,.03f}'
@@ -125,11 +125,11 @@ def _reverse_parents(a):
         yield acctops.join(*chain[:i+1])
 
 def _generate_account_order(open_close):
-    ordermap = ddict(lambda: [999999])
+    ordermap = ddict(lambda: (999999,))
     for a, (o, _) in open_close.items():
         if 'ordering' in o.meta:
             order = str(o.meta['ordering']).split('.')
-            ordermap[a] = [int(x) for x in order]
+            ordermap[a] = tuple(int(x) for x in order)
     def account_order(cat):
         a, _ = cat
         return tuple(ordermap[chain] for chain in _reverse_parents(a))

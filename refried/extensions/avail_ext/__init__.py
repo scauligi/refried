@@ -16,7 +16,7 @@ from fava.core.tree import Tree
 from fava.ext import FavaExtensionBase
 from fava.template_filters import cost_or_value
 
-from refried import filter_postings
+from refried import filter_postings, _reverse_parents
 
 import datetime
 from collections import defaultdict as ddict
@@ -100,7 +100,10 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
         return "{} {}\xa0".format(num, currency)
 
     def _ordering(self, a):
-        return [int(x) for x in str(self.ledger.accounts[a.account].meta.get('ordering', ["999999"])).split('.')]
+        def _ordermap(a):
+            meta = self.ledger.accounts[a].meta
+            return tuple(map(int, str(meta.get('ordering', 999999)).split('.')))
+        return tuple(map(_ordermap, _reverse_parents(a.account)))
 
     def _name(self, a):
         meta = self.ledger.accounts[a.account].meta
