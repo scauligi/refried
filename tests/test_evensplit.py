@@ -29,8 +29,41 @@ class TestEvensplit(test_utils.TestCase):
 
             2020-05-28 *
                 Assets:Cash           -20 USD
-                Liabilities:Partner    10 USD
                 Expenses:Dining-Out    10 USD
+                    split: Liabilities:Partner
+                Liabilities:Partner    10 USD
+        """, entries)
+
+    @loader.load_doc(expect_errors=False)
+    def test_split_joining(self, entries, errors, options):
+        """
+            plugin "refried.plugins.evensplit"
+
+            2020-05-28 open Assets:Cash
+            2020-05-28 open Liabilities:Partner
+            2020-05-28 open Expenses:Dining-Out
+            2020-05-28 open Expenses:Household
+
+            2020-05-28 *
+                Assets:Cash           -30 USD
+                Expenses:Dining-Out    20 USD
+                    split: Liabilities:Partner
+                Expenses:Household     10 USD
+                    split: Liabilities:Partner
+        """
+        self.assertEqualEntries("""
+            2020-05-28 open Assets:Cash
+            2020-05-28 open Liabilities:Partner
+            2020-05-28 open Expenses:Dining-Out
+            2020-05-28 open Expenses:Household
+
+            2020-05-28 *
+                Assets:Cash           -30 USD
+                Expenses:Dining-Out    10 USD
+                    split: Liabilities:Partner
+                Expenses:Household      5 USD
+                    split: Liabilities:Partner
+                Liabilities:Partner    15 USD
         """, entries)
 
     @loader.load_doc(expect_errors=False)
@@ -54,8 +87,9 @@ class TestEvensplit(test_utils.TestCase):
 
             2020-05-28 *
                 Assets:Cash           -20 USD
-                Liabilities:Partner    10 USD
                 Expenses:Dining-Out    10 USD
+                    split: Liabilities:Partner
+                Liabilities:Partner    10 USD
         """, entries)
 
     @loader.load_doc(expect_errors=False)
@@ -80,9 +114,10 @@ class TestEvensplit(test_utils.TestCase):
 
             2020-05-28 *
                 Assets:Cash           -20 USD
-                Liabilities:Partner    10 USD
-                    meta: "data"
                 Expenses:Dining-Out    10 USD
+                    meta: "data"
+                    split: Liabilities:Partner
+                Liabilities:Partner    10 USD
                     meta: "data"
         """, entries)
 
@@ -109,9 +144,11 @@ class TestEvensplit(test_utils.TestCase):
 
                 2020-05-28 *
                     Assets:Cash           -20 USD
-                    Liabilities:Partner    10 USD
                     Expenses:Dining-Out    10 USD
                         meta: "data"
+                        split: Liabilities:Partner
+                    Liabilities:Partner    10 USD
+                        ; meta: "data"
             """, entries)
 
 if __name__ == '__main__':
