@@ -13,9 +13,16 @@ def wishfarm(entries, options_map):
         if isinstance(entry, Open):
             if 'wish_slot' in entry.meta:
                 slot = entry.meta['wish_slot']
-                name = entry.meta.get('name')
-                if name is None:
-                    name = acctops.split(entry.name)[-1]
+                if 'name' in entry.meta:
+                    errors.append(
+                        WishfarmError(
+                            entry.meta,
+                            'name should be handled by wishfarm plugin',
+                            [entry]))
+                    continue
+                tag = entry.meta.get('tag')
+                if tag is None:
+                    tag = acctops.split(entry.account)[-1]
                 if slot in wish_sprouts:
                     errors.append(
                         WishfarmError(
@@ -23,8 +30,8 @@ def wishfarm(entries, options_map):
                             f'Duplicate wish_slot: "{slot}"',
                             [wish_sprouts[slot], entry]))
                     continue
-                wish_sprouts[slot] = (entry, name)
-                entry.meta['name'] = f'({name}) ...'
+                wish_sprouts[slot] = (entry, tag)
+                entry.meta['name'] = f'({tag}) ...'
     for entry in entries:
         if isinstance(entry, Custom) and entry.type == "wish-list":
             if 'wish_slot' in entry.meta:
@@ -37,7 +44,10 @@ def wishfarm(entries, options_map):
                             entry))
                     continue
                 sprout, slot_name = wish_sprouts.pop(slot)
-                sprout.meta.update({k: v for k, v in entry.meta.items() if k not in sprout.meta})
                 wish_name = entry.values[0].value
+                sprout.meta['wish_name'] = wish_name
+                sprout.meta['wish_filename'] = entry.meta['filename']
+                sprout.meta['wish_lineno'] = entry.meta['lineno']
+                sprout.meta.update({k: v for k, v in entry.meta.items() if k not in sprout.meta})
                 sprout.meta['name'] = f'({slot_name}) {wish_name}'
     return entries, errors
