@@ -4,6 +4,7 @@ This is a simple example of Fava's extension reports system.
 """
 import re
 
+from beancount.core import convert
 from beancount.core.data import Open
 from beancount.core.number import Decimal, ZERO
 from beancount.core.inventory import Inventory, Position, Amount
@@ -117,11 +118,10 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
     def _only_position(self, inventory):
         if inventory is None:
             return Amount(ZERO, "USD")
+        inventory = inventory.reduce(convert.get_weight)
         if inventory.is_empty():
             return Amount(ZERO, "USD")
-        currency ,= inventory.currencies()
-        amount: Amount = inventory.get_currency_units(currency)
-        return amount
+        return inventory.get_only_position().units
 
     def _row(self, rows, a):
         if isinstance(a, RealAccount):
