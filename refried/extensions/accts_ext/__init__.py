@@ -33,16 +33,19 @@ class AcctsExt(FavaExtensionBase):  # pragma: no cover
 
         _, wrows = query.run_query(self.ledger.entries, self.ledger.options, '''
             select account,number(only("USD", sum(position)))
+                from not "future" in tags
                 where account ~ "^(Assets|Liabilities)"
                     and (meta('_cleared') = True or number < 0)
                 group by 1''')
         _, crows = query.run_query(self.ledger.entries, self.ledger.options, '''
             select account,number(only("USD", sum(position)))
+                from not "future" in tags
                 where account ~ "^(Assets|Liabilities)"
                     and (meta('_cleared') = True)
                 group by 1''')
         _, trows = query.run_query(self.ledger.entries, self.ledger.options, '''
             select account,number(only("USD", sum(position)))
+                from not "future" in tags
                 where account ~ "^(Assets|Liabilities)"
                 group by 1''')
 
