@@ -5,7 +5,7 @@ from beancount import loader
 from beancount.core import account as acctops, data
 from beancount.core.data import Open, Close, Custom, Transaction
 
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 
 def halfcents(d):
     s = f'{d:,.03f}'

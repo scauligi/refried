@@ -6,7 +6,7 @@ from refried import *
 from decimal import Decimal
 
 def test_version():
-    assert refried.__version__ == '0.5.1'
+    assert refried.__version__ == '0.5.2'
 
 class TestRefried(unittest.TestCase):
     def test_halfcents(self):
