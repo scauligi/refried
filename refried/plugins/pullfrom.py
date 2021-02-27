@@ -26,8 +26,7 @@ def pullfrom(entries, options_map):
                     entry = entry._replace(links=new_links)
                     new_meta = posting.meta.copy()
                     del new_meta['pull_from']
-                    new_meta.pop('memo')
-                    new_meta.pop('a', None)
+                    new_meta.pop('memo', None)
                     new_meta['filename'] = entry.meta['filename']
                     new_meta['lineno'] = entry.meta['lineno']
                     new_entry = entry._replace(
