@@ -1,5 +1,5 @@
 from collections import defaultdict as ddict
-from copy import deepcopy
+from copy import copy, deepcopy
 from beancount.core.data import Transaction, Posting, Amount, Cost, filter_txns
 from beancount.core.account import is_valid as is_account
 from beancount.core.amount import div as adiv
@@ -29,6 +29,24 @@ def evensplit(entries, options_map):
     for entry in filter_txns(entries):
         new_postings_map = ddict(lambda: (D(), {}))
         special_postings = []
+
+        split_others = set(posting.meta.get('split_others')
+                           for posting in entry.postings
+                           if posting.meta)
+        split_others.discard(None)
+
+        if split_others:
+            split_others = list(split_others)
+            try:
+                split_others ,= split_others
+            except ValueError:
+                pass
+            for i, posting in enumerate(entry.postings):
+                if posting.meta is None:
+                    posting = posting._replace(meta={})
+                if 'split_others' not in posting.meta and 'split' not in posting.meta:
+                    posting.meta['split'] = copy(split_others)
+                entry.postings[i] = posting
 
         for i, posting in enumerate(entry.postings):
             if posting.meta and 'split' in posting.meta:
