@@ -16,8 +16,13 @@
   border-radius: 25px;
 }
 
+.tree-table .available.balance-children {
+  padding-right: 0.7em;
+}
+
 .tree-table .available.negative {
   padding-left: 0.7em;
+  padding-right: 0.7em;
   padding-top: 2px;
   padding-bottom: 2px;
   background-color: var(--color-budget-negative);
@@ -27,6 +32,7 @@
 
 .tree-table .available.positive {
   padding-left: 0.7em;
+  padding-right: 0.7em;
   padding-top: 2px;
   padding-bottom: 2px;
   background-color: var(--color-budget-positive);
@@ -115,7 +121,7 @@
                   {{ extension.format_amount(available) }}
                 </span>
               </span>
-              <span class="balance-children">
+              <span class="balance-children available">
                 {{ extension.format_amount(extension._row_children(vrows, account), show_if_zero=True) }}
               </span>
             </span>
