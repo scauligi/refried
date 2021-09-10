@@ -8,6 +8,10 @@ Applies metadata to postings for assets/liabilities signifying whether they
 have cleared in their corresponding accounts or not.
 See [the document on YNAB-style account views](/docs/clearing.md) for details.
 
+## close_zero
+
+WIP
+
 ## effective_date
 
 Creates linked transactions based on `effective_date:` metadata on postings.
@@ -30,6 +34,10 @@ Creates additional postings in a transaction according to `split:` metadata on p
 Can be specified multiple times to split the amount among several accounts.
 
 Can specify a string to create special "reimbursement" postings.
+
+## pull_from
+
+WIP
 
 ## rebudget
 
