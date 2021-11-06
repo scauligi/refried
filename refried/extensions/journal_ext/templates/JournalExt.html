@@ -112,7 +112,7 @@
   <script type="text/javascript">
     function toggle_date(entry_hash) {
       let xhr = new XMLHttpRequest();
-      xhr.open('GET', "{{ url_for_current() }}?account_name={{account_name}}&toggle_date_entry_hash=" + entry_hash);
+      xhr.open('GET', "{{ url_for('extension_report', report_name='JournalExt') }}?account_name={{account_name}}&toggle_date_entry_hash=" + entry_hash);
       xhr.send();
       xhr.onload = function() {
         document.getElementById('reload-page').click();
@@ -121,7 +121,7 @@
   </script>
 
 {% macro account_link(name) %}<a class="account-link" href="{{ url_for('account', name=name) }}">{{ name }}</a>{% endmacro %}
-{% macro journal_url(aname, entry) %}{{ url_for_current(account_name=aname) }}#{{ extension._hash_entry(entry) }}{% endmacro %}
+{% macro journal_url(aname, entry) %}{{ url_for('extension_report', report_name='JournalExt', account_name=aname) }}#{{ extension._hash_entry(entry) }}{% endmacro %}
 {% macro render_metadata(metadata, entry_hash=None) -%}
 {% if metadata %}
 <dl class="metadata">

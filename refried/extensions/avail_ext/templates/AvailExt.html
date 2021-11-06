@@ -60,9 +60,9 @@
 {% set vrows = extension.midvrows %}
 <h2>Budget: {{ extension._date_range() }}</h2>
 <h3>
-  <a href="{{ url_for_current(period=extension._prev_month()) }}">&lt;&lt;</a> |
-  <a href="{{ url_for_current(period=extension._period_for(today())) }}">Current period</a> |
-  <a href="{{ url_for_current(period=extension._next_month()) }}">&gt;&gt;</a>
+  <a href="{{ url_for("extension_report", report_name="AvailExt", period=extension._prev_month()) }}">&lt;&lt;</a> |
+  <a href="{{ url_for("extension_report", report_name="AvailExt", period=extension._period_for(today())) }}">Current period</a> |
+  <a href="{{ url_for("extension_report", report_name="AvailExt", period=extension._next_month()) }}">&gt;&gt;</a>
 </h3>
     <ol is="tree-table" class="flex-table tree-table">
         <li class="head">
