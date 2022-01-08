@@ -1,6 +1,6 @@
 import collections
 from refried import is_account_account
-from beancount.core import convert
+from beancount.core import convert, interpolate
 from beancount.core.data import Open, Transaction, filter_txns
 from beancount.core.inventory import Inventory
 
@@ -38,9 +38,8 @@ def balance_check(entries, options_map):
                 asum.add_position(posting)
             elif components[0] in ('Income', 'Expenses'):
                 bsum.add_position(posting)
-    asum = asum.reduce(convert.get_weight)
-    bsum = bsum.reduce(convert.get_weight)
-    if asum != -bsum:
+    csum = asum.reduce(convert.get_weight) + bsum.reduce(convert.get_weight)
+    if not csum.is_small(interpolate.infer_tolerances({}, options_map)):
         errors.append(
             BudgetBalanceError(
                 {'filename': '<budget_balance_check>',
