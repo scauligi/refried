@@ -2,18 +2,13 @@
 
 This is a simple example of Fava's extension reports system.
 """
-import re
-
-from beancount.core.data import iter_entry_dates
-from beancount.core.data import Open
+from beancount.core import realization
+from beancount.core.data import Balance
 from beancount.core.number import Decimal
-from beancount.core.number import ZERO
-from beancount.core.inventory import Inventory
 from beancount.query import query
 
-from fava.core.tree import Tree
+from fava.core._compat import FLAG_UNREALIZED
 from fava.ext import FavaExtensionBase
-from fava.template_filters import cost_or_value
 
 from refried import _reverse_parents
 
@@ -63,8 +58,10 @@ class AcctsExt(FavaExtensionBase):  # pragma: no cover
 
     def _name(self, a):
         meta = self.ledger.accounts[a.account].meta
-        #return meta.get('name', a.account.rsplit(':', 1)[-1])
-        return a.account.rsplit(':', 1)[-1]
+        name = meta.get('name')
+        if name is None:
+            name = a.account.rsplit(':', 1)[-1]
+        return name
 
     def _sort_subtree(self, root):
         children = list(root.values())
@@ -87,3 +84,35 @@ class AcctsExt(FavaExtensionBase):  # pragma: no cover
     def _is_open(self, a):
         close_date = self.ledger.accounts[a.account].close_date
         return close_date >= datetime.date.today()
+
+    def account_uptodate_status(self, account_name):
+        """Status of the last balance.
+
+        Args:
+            account_name: An account name.
+
+        Returns:
+            A status string for the last balance of the account,
+            as well as the date of the last balance.
+
+            - 'green':  A balance check that passed.
+            - 'red':    A balance check that failed.
+        """
+
+        real_account = realization.get_or_create(
+            self.ledger.all_root_account, account_name
+        )
+
+        status = None
+        date = None
+        for txn_posting in reversed(real_account.txn_postings):
+            if isinstance(txn_posting, Balance):
+                date = txn_posting.date
+                if txn_posting.diff_amount:
+                    status = "red"
+                    break
+                # XXX check date
+                status = "green"
+                break
+
+        return status, date

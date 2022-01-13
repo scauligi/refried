@@ -1,6 +1,12 @@
 {% import 'macros/_account_macros.html' as account_macros with context %}
 {% import "_charts.html" as charts with context %}
 
+{% set infotext = {
+    'green':  "The last balance check is passing.",
+    'red':    "The last balance check is failing.",
+    'yellow': "The last balance check has not been updated in a while.",
+} %}
+
 <style>
 .tree-table .balance.negative {
   color: var(--budget-negative);
@@ -43,6 +49,19 @@
             <a href="{{ url_for('extension_report', report_name='JournalExt', account_name=account.account) }}" class="account">
               {{ extension._name(account) }}
             </a>
+            {% if account.account and ledger.accounts[account.account].meta.get('fava-uptodate-indication') %}
+              {% set status, last_balance = extension.account_uptodate_status(account.account) %}
+              {% set balance=account_macros.balance_directive(ledger, account.account) %}
+              {% set last_balance_activity = (today() - last_balance).days if last_balance else 0 %}
+              {% if last_balance_activity > ledger.fava_options['uptodate-indicator-grey-lookback-days'] %}
+                {% set status = "yellow" %}
+              {% endif %}
+              <copyable-text class="status-indicator status-{{ status }}" title="{{ infotext[status] }} ({{ last_balance_activity }} days ago)
+
+              Click to copy the balance directives to the clipboard:
+
+              {{ balance }}" data-clipboard-text="{{ balance }}"></copyable-text>
+            {% endif %}
             </span>
             {% set working = extension._row(wrows, account) %}
             {% set cleared = extension._row(crows, account) %}
