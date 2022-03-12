@@ -88,42 +88,54 @@
               {{ extension._name(account) }}
             </a>
             </span>
-            {% set budgeted = extension._row(brows, account) %}
-            {% set spent = extension._row(srows, account) %}
-            {% set available = extension._row(vrows, account) %}
-            <span class="num {{ 'has-balance' if budgeted else '' }}">
-              <span class="balance {{ 'negative' if budgeted.number < 0 else 'positive' if budgeted.number > 0 else '' }}">
-                <a href="{{ url_for('account', name=account.account, time=period, filter='#rebudget') }}">
-                  {{ extension.format_amount(budgeted) }}
-                </a>
-              </span>
-              <span class="balance-children">
-                <a href="{{ url_for('account', name=account.account, time=period, filter='#rebudget') }}">
-                  {{ extension.format_amount(extension._row_children(brows, account), show_if_zero=True) }}
-                </a>
-              </span>
-            </span>
-            <span class="num {{ 'has-balance' if spent or spent.currency != 'USD' else '' }}">
-              <span class="balance {{ 'negative' if spent.number < 0 else 'positive' if spent.number > 0 else '' }}">
-                <a href="{{ url_for('account', name=account.account, time=period, filter='-#rebudget') }}">
-                  {{ extension.format_amount(spent) }}
-                </a>
-              </span>
-              <span class="balance-children">
-                <a href="{{ url_for('account', name=account.account, time=period, filter='-#rebudget') }}">
-                  {{ extension.format_amount(extension._row_children(srows, account), show_if_zero=True) }}
-                </a>
-              </span>
-            </span>
-            <span class="num {{ 'has-balance' if available else '' }}">
-              <span class="balance">
-                <span class="number available {{ 'negative' if available.number < 0 else 'positive' if available.number > 0 else '' }}">
-                  {{ extension.format_amount(available) }}
+            {% set budgeteds = extension._row(brows, account) %}
+            {% set spents = extension._row(srows, account) %}
+            {% set availables = extension._row(vrows, account) %}
+            <span class="num {{ 'has-balance' if budgeteds else '' }}">
+              {% for budgeted in budgeteds %}
+                <span class="balance {{ 'negative' if budgeted.number < 0 else 'positive' if budgeted.number > 0 else '' }}">
+                  <a href="{{ url_for('account', name=account.account, time=period, filter='#rebudget') }}">
+                    {{ extension.format_amount(budgeted) }}
+                  </a>
                 </span>
-              </span>
-              <span class="balance-children available">
-                {{ extension.format_amount(extension._row_children(vrows, account), show_if_zero=True) }}
-              </span>
+              {% endfor %}
+              {% for budgeted in extension._row_children(brows, account) %}
+                <span class="balance-children">
+                  <a href="{{ url_for('account', name=account.account, time=period, filter='#rebudget') }}">
+                    {{ extension.format_amount(budgeted, show_if_zero=True) }}
+                  </a>
+                </span>
+              {% endfor %}
+            </span>
+            <span class="num {{ 'has-balance' if spents else '' }}">
+              {% for spent in spents %}
+                <span class="balance {{ 'negative' if spent.number < 0 else 'positive' if spent.number > 0 else '' }}">
+                  <a href="{{ url_for('account', name=account.account, time=period, filter='-#rebudget') }}">
+                    {{ extension.format_amount(spent) }}
+                  </a>
+                </span>
+              {% endfor %}
+              {% for spent in extension._row_children(srows, account) %}
+                <span class="balance-children">
+                  <a href="{{ url_for('account', name=account.account, time=period, filter='-#rebudget') }}">
+                    {{ extension.format_amount(spent, show_if_zero=True) }}
+                  </a>
+                </span>
+              {% endfor %}
+            </span>
+            <span class="num {{ 'has-balance' if availables else '' }}">
+              {% for available in availables %}
+                <span class="balance">
+                  <span class="number available {{ 'negative' if available.number < 0 else 'positive' if available.number > 0 else '' }}">
+                    {{ extension.format_amount(available) }}
+                  </span>
+                </span>
+              {% endfor %}
+              {% for available in extension._row_children(vrows, account) %}
+                <span class="balance-children available">
+                  {{ extension.format_amount(available, show_if_zero=True) }}
+                </span>
+              {% endfor %}
             </span>
       </p>
     <ol>

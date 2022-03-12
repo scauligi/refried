@@ -98,7 +98,7 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
         if currency == "USD":
             return self.format_currency(number, currency, show_if_zero)
         num = self.format_currency(number, currency, show_if_zero=True).replace('\xa0', '')
-        return "{} {}\xa0".format(num, currency)
+        return "{} {}".format(num, currency)
 
     def _ordering(self, a):
         def _ordermap(a):
@@ -123,18 +123,27 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
             return Amount(ZERO, "USD")
         return inventory.get_only_position().units
 
+    def _many_positions(self, inventory):
+        if inventory is None:
+            return []
+        inventory = inventory.reduce(convert.get_weight)
+        if inventory.is_empty():
+            return []
+        return [pos.units for pos in inventory.get_positions()]
+
     def _row(self, rows, a):
         if isinstance(a, RealAccount):
             a = a.account
         d: Inventory = rows.get(a)
-        return -self._only_position(d)
+        return [-amt for amt in self._many_positions(d)]
 
     def _row_children(self, rows, a):
         sum = Inventory()
         for sub in rows:
             if sub.startswith(a.account):
                 sum.add_inventory(rows.get(sub, Inventory()))
-        return -self._only_position(sum.reduce(convert.get_weight))
+        amts = [-amt for amt in self._many_positions(sum.reduce(convert.get_weight))]
+        return amts if amts else [Amount(ZERO, "USD")]
 
     def _has_children(self, a):
         return sum(self._is_open(c) for c in a.values())
