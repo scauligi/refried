@@ -63,45 +63,28 @@
               {{ balance }}" data-clipboard-text="{{ balance }}"></copyable-text>
             {% endif %}
             </span>
-            {% set working = extension._row(wrows, account) %}
-            {% set cleared = extension._row(crows, account) %}
-            {% set total = extension._row(trows, account) %}
-            <span class="num {{ 'has-balance' if working else '' }}">
-              <span class="balance {{ 'negative' if working < 0 else 'positive' if working > 0 else '' }}">
-                <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
-                  {{ working | format_currency("USD") }}
-                <!-- </a> -->
+            {% for xrows in (wrows, crows, trows) %}
+              {% set amounts = extension._row(xrows, account) %}
+              <span class="num {{ 'has-balance' if amounts else '' }}">
+                {% for amount in amounts %}
+                  {% set num = amount.number %}
+                  <span class="balance {{ 'negative' if num < 0 else 'positive' if num > 0 else '' }}">
+                    <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
+                      {{ amount.number | format_currency(amount.currency) }}
+                      {{ amount.currency if amount.currency != "USD" else "" }}
+                    <!-- </a> -->
+                  </span>
+                {% endfor %}
+                {% for amount in extension._row_children(xrows, account) %}
+                  <span class="balance-children">
+                    <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
+                      {{ amount.number | format_currency(amount.currency, show_if_zero=True) }}
+                      {{ amount.currency if amount.currency != "USD" else "" }}
+                    <!-- </a> -->
+                  </span>
+                {% endfor %}
               </span>
-              <span class="balance-children">
-                <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
-                  {{ extension._row_children(wrows, account) | format_currency("USD", show_if_zero=True) }}
-                <!-- </a> -->
-              </span>
-            </span>
-            <span class="num {{ 'has-balance' if cleared else '' }}">
-              <span class="balance {{ 'negative' if cleared < 0 else 'positive' if cleared > 0 else '' }}">
-                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
-                  {{ cleared | format_currency("USD") }}
-                <!-- </a> -->
-              </span>
-              <span class="balance-children">
-                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
-                  {{ extension._row_children(crows, account) | format_currency("USD", show_if_zero=True) }}
-                <!-- </a> -->
-              </span>
-            </span>
-            <span class="num {{ 'has-balance' if total else '' }}">
-              <span class="balance {{ 'negative' if total < 0 else 'positive' if total > 0 else '' }}">
-                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
-                  {{ total | format_currency("USD") }}
-                <!-- </a> -->
-              </span>
-              <span class="balance-children">
-                <!-- <a href="{{ url_for('account', name=account.account, filter='-#rebudget') }}"> -->
-                  {{ extension._row_children(trows, account) | format_currency("USD", show_if_zero=True) }}
-                <!-- </a> -->
-              </span>
-            </span>
+            {% endfor %}
     </p>
     <ol>
     {{ loop(extension._sort_subtree(account)) }}

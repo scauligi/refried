@@ -4,7 +4,8 @@ This is a simple example of Fava's extension reports system.
 """
 from beancount.core import realization
 from beancount.core.data import Balance
-from beancount.core.number import Decimal
+from beancount.core.number import Decimal, ZERO
+from beancount.core.inventory import Inventory, Amount
 from beancount.query import query
 
 from fava.core._compat import FLAG_UNREALIZED
@@ -27,19 +28,19 @@ class AcctsExt(FavaExtensionBase):  # pragma: no cover
         credit = self.ledger.all_root_account.get('Liabilities')
 
         _, wrows = query.run_query(self.ledger.entries, self.ledger.options, '''
-            select account,number(only("USD", sum(position)))
+            select account,sum(position)
                 from not "future" in tags
                 where account ~ "^(Assets|Liabilities)"
                     and (meta('_cleared') = True or number < 0)
                 group by 1''')
         _, crows = query.run_query(self.ledger.entries, self.ledger.options, '''
-            select account,number(only("USD", sum(position)))
+            select account,sum(position)
                 from not "future" in tags
                 where account ~ "^(Assets|Liabilities)"
                     and (meta('_cleared') = True)
                 group by 1''')
         _, trows = query.run_query(self.ledger.entries, self.ledger.options, '''
-            select account,number(only("USD", sum(position)))
+            select account,sum(position)
                 from not "future" in tags
                 where account ~ "^(Assets|Liabilities)"
                 group by 1''')
@@ -69,17 +70,15 @@ class AcctsExt(FavaExtensionBase):  # pragma: no cover
         return children
 
     def _row(self, rows, a):
-        d = rows.get(a.account)
-        if d is None:
-            d = Decimal()
-        return d
+        inv = rows.get(a.account, Inventory())
+        return [pos.units for pos in inv.get_positions()]
 
     def _row_children(self, rows, a):
-        sum = Decimal()
+        sum = Inventory()
         for sub in rows:
-            if sub.startswith(a.account):
-                sum += rows[sub] if rows[sub] else Decimal()
-        return sum
+            if sub.startswith(a.account) and not rows[sub].is_empty():
+                sum += rows[sub]
+        return [pos.units for pos in sum.get_positions()] if not sum.is_empty() else [Amount(ZERO, "USD")]
 
     def _is_open(self, a):
         close_date = self.ledger.accounts[a.account].close_date
