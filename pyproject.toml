@@ -18,5 +18,5 @@ python = "^3.6"
 pytest = "^5.2"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
