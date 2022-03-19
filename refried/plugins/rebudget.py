@@ -14,7 +14,8 @@ def rebudget_entry(entry):
             if is_account_account(posting.account):
                 break
         else:
-            return entry._replace(tags=(entry.tags | frozenset(('rebudget',))))
+            if 'tx' not in entry.tags:
+                return entry._replace(tags=(entry.tags | frozenset(('rebudget',))))
     return entry
 
 def rebudget(entries, options_map):
