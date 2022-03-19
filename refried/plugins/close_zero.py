@@ -12,7 +12,7 @@ def close_zero(entries, options_map):
     currencies = {}
     new_entries = []
     for entry in entries:
-        if isinstance(entry, Open):
+        if isinstance(entry, Open) and entry.currencies:
             currencies[entry.account] = entry.currencies
         elif isinstance(entry, Close):
             for currency in currencies.get(entry.account, default_currencies):
