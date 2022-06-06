@@ -51,7 +51,7 @@ def pullfrom(entries, options_map):
                     new_entry = entry._replace(
                         payee=None,
                         narration=memo,
-                        tags=set(),
+                        # tags=set(),
                         links=link_id,
                         meta=new_meta,
                         postings=new_postings)
