@@ -1,8 +1,9 @@
 import datetime
+import re
 import functools
 from collections import defaultdict as ddict, OrderedDict
 from beancount import loader
-from beancount.core import account as acctops, data
+from beancount.core import account as acctops
 from beancount.core.data import Open, Close, Custom, Transaction
 
 __version__ = '0.7.0'
@@ -165,7 +166,7 @@ def walk(open_close, root, start=None, end=None):
         seen.add(a)
         yield a, o
 
-def tree(open_close, start=None, end=None):
+def tree(open_close, start=None, end=None, patterns=None):
     """Creates a tree (using `dict`s) of account/groups.
     Respects `ordering:` metadata, otherwise asciibetic by account name.
 
@@ -173,18 +174,22 @@ def tree(open_close, start=None, end=None):
       open_close: The dictionary returned from `refried.get_account_entries()`.
       start: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
       end: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
+      patterns: a list of regex patterns to filter accounts by.
     Returns:
       A recursive `dict` of account string -> (Open/Custom directive, subtree of children).
     """
     accts = _accounts_sorted(open_close, start, end)
-    seen = set()
+    if patterns:
+        accts = (
+            acct
+            for acct in accts
+            if any(re.search(pattern, acct[0], re.I) for pattern in patterns)
+        )
     tree = dict()
     for a, (o, _) in accts:
         subtree = tree
         for parent in _reverse_parents(acctops.parent(a)):
-            subtree = subtree.setdefault(parent, (None, OrderedDict()))[1]
-            if parent not in seen:
-                seen.add(parent)
+            subtree = subtree.setdefault(parent, (open_close[a], OrderedDict()))[1]
         subtree[a] = (o, OrderedDict())
     return tree
 
