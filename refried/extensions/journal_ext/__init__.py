@@ -52,7 +52,7 @@ class JournalExt(FavaExtensionBase):  # pragma: no cover
         return wrow[0][0], crow[0][0], trow[0][0]
 
     def _get_entries(self, account_name):
-        wjc = self.ledger.fava_options['account-journal-include-children']
+        wjc = self.ledger.fava_options.account_journal_include_children
         if account_name:
             entries = self.ledger.account_journal(
                 account_name,
