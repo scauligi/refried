@@ -1,7 +1,10 @@
+import contextlib
 import datetime
-import re
 import functools
+import glob
+import re
 from collections import defaultdict as ddict, OrderedDict
+from pathlib import Path
 from beancount import loader
 from beancount.core import account as acctops
 from beancount.core.data import Open, Close, Custom, Transaction
@@ -17,8 +20,23 @@ def halfcents(d):
 def is_account_account(account):
     return account.startswith('Assets:') or account.startswith('Liabilities:')
 
-def load_file(*args, futures=False, **kwargs):
-    entries, errors, options = loader.load_file(*args, **kwargs)
+@contextlib.contextmanager
+def _add_files(addl_files):
+    def _uncached_load_file(filename, *args, **kw):
+        return loader._load([(filename, True), *[(f'include "{fname}"', False) for fname in addl_files]], *args, **kw)
+    _orig_uncached_load_file = loader._uncached_load_file
+    assert loader._load_file.__closure__[1].cell_contents == _orig_uncached_load_file
+    loader._load_file.__closure__[1].cell_contents = _uncached_load_file
+    yield
+    loader._load_file.__closure__[1].cell_contents = _orig_uncached_load_file
+
+def load_file(filename, *args, futures=False, addl_files=(), **kwargs):
+    for line in Path(filename).read_text().splitlines():
+        m = re.fullmatch(r'\d{4}-\d{2}-\d{2}\s+custom\s+"includeglob"\s+"([^"]*)"', line)
+        if m:
+            addl_files = (*addl_files, *glob.glob(m.group(1)))
+    with _add_files(addl_files) if addl_files else contextlib.nullcontext():
+        entries, errors, options = loader.load_file(filename, *args, **kwargs)
     if not futures:
         culled_entries = [entry for entry in entries
                           if (not isinstance(entry, Transaction)) or ('future' not in entry.tags)]
