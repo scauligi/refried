@@ -62,7 +62,7 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
         self.midsrows = ddict(Inventory)
         self.vrows = ddict(Inventory)
         self.midvrows = ddict(Inventory)
-        for entry, posting in filter_postings(self.ledger.entries):
+        for entry, posting in filter_postings(self.ledger.all_entries):
             if entry.date >= self.period_end:
                 continue
             self.vrows[posting.account].add_position(posting)
