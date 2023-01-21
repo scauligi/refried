@@ -11,6 +11,7 @@ from beancount.core.inventory import Inventory, Position, Amount
 from beancount.core.realization import RealAccount
 from beancount.core import getters
 from beancount.core import convert
+from beancount.parser.options import get_account_types
 from beancount.query import query
 
 from fava.core.tree import Tree
@@ -31,9 +32,10 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
 
     def make_table(self, period):
         """An account tree based on matching regex patterns."""
+        account_types = get_account_types(self.ledger.options)
         root = [
-            self.ledger.all_root_account.get('Income'),
-            self.ledger.all_root_account.get('Expenses'),
+            self.ledger.all_root_account.get(account_types.income),
+            self.ledger.all_root_account.get(account_types.expenses),
         ]
 
         today = datetime.date.today()
