@@ -8,10 +8,10 @@ __plugins__ = ('rebudget', 'balance_check')
 
 BudgetBalanceError = collections.namedtuple('BudgetBalanceError', 'source message entry')
 
-def rebudget_entry(entry):
+def rebudget_entry(entry, options_map):
     if isinstance(entry, Transaction):
         for posting in entry.postings:
-            if is_account_account(posting.account):
+            if is_account_account(posting.account, options_map):
                 break
         else:
             if 'tx' not in entry.tags:
@@ -19,7 +19,7 @@ def rebudget_entry(entry):
     return entry
 
 def rebudget(entries, options_map):
-    return [rebudget_entry(e) for e in entries], []
+    return [rebudget_entry(e, options_map) for e in entries], []
 
 def balance_check(entries, options_map):
     errors = []

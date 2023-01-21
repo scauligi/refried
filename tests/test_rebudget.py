@@ -150,3 +150,62 @@ class TestRebudget(cmptest.TestCase):
                 Expenses:Money-for-IRA   20 USD
         """
         pass
+
+
+    # Tests with different root account names
+
+    @loader.load_doc(expect_errors=False)
+    def test_leave_alone_with_other_roots(self, entries, errors, options):
+        """
+            plugin "refried.plugins.rebudget"
+
+            option "name_assets" "Activos"
+            option "name_liabilities" "Pasivos"
+            option "name_equity" "Capital"
+            option "name_income" "Ingresos"
+            option "name_expenses" "Gastos"
+
+            2020-05-28 open Activos:Corriente
+            2020-05-28 open Pasivos:Credito
+
+            2020-05-28 *
+                Activos:Corriente      -20 USD
+                Pasivos:Credito         20 USD
+        """
+        self.assertEqualEntries(self.test_leave_alone_with_other_roots.__input__, entries)
+
+    @loader.load_doc(expect_errors=False)
+    def test_expense_expense_with_other_roots(self, entries, errors, options):
+        """
+            plugin "refried.plugins.rebudget"
+
+            option "name_assets" "Activos"
+            option "name_liabilities" "Pasivos"
+            option "name_equity" "Capital"
+            option "name_income" "Ingresos"
+            option "name_expenses" "Gastos"
+
+            2020-05-28 open Gastos:Dining-Out
+            2020-05-28 open Gastos:Groceries
+
+            2020-05-28 *
+                Gastos:Dining-Out   -20 USD
+                Gastos:Groceries     20 USD
+        """
+        self.assertEqualEntries("""
+            plugin "refried.plugins.rebudget"
+
+            option "name_assets" "Activos"
+            option "name_liabilities" "Pasivos"
+            option "name_equity" "Capital"
+            option "name_income" "Ingresos"
+            option "name_expenses" "Gastos"
+
+            2020-05-28 open Gastos:Dining-Out
+            2020-05-28 open Gastos:Groceries
+
+            2020-05-28 * #rebudget
+                Gastos:Dining-Out   -20 USD
+                Gastos:Groceries     20 USD
+        """, entries)
+
