@@ -1,8 +1,10 @@
 import collections
 from refried import is_account_account
 from beancount.core import convert, interpolate
+from beancount.core.account_types import get_account_type
 from beancount.core.data import Open, Transaction, filter_txns
 from beancount.core.inventory import Inventory
+from beancount.parser.options import get_account_types
 
 __plugins__ = ('rebudget', 'balance_check')
 
@@ -30,14 +32,15 @@ def balance_check(entries, options_map):
                 tracking_accounts.add(entry.account)
     asum = Inventory()
     bsum = Inventory()
+    account_types = get_account_types(options_map)
     for entry in filter_txns(entries):
         for posting in entry.postings:
             if posting.account in tracking_accounts:
                 continue
-            components = posting.account.split(':')
-            if components[0] in ('Assets', 'Liabilities'):
+            account_type = get_account_type(posting.account)
+            if account_type in (account_types.assets, account_types.liabilities):
                 asum.add_position(posting)
-            elif components[0] in ('Income', 'Expenses'):
+            elif account_type in (account_types.income, account_types.expenses):
                 bsum.add_position(posting)
     csum = asum.reduce(convert.get_weight) + bsum.reduce(convert.get_weight)
     if not csum.is_small(interpolate.infer_tolerances({}, options_map)):
