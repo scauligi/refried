@@ -1,4 +1,4 @@
-[tool.poetry]
+[profile]
 name = "beancount-refried"
 version = "0.7.0"
 description = "A collection of plugins and scripts for beancount and fava for monthly budgeting."
@@ -6,17 +6,3 @@ license = "GPL-3.0-or-later"
 authors = ["scauligi"]
 readme = "README.md"
 repository = "https://github.com/scauligi/refried"
-
-packages = [
-  { include = "refried" }
-]
-
-[tool.poetry.dependencies]
-python = "^3.6"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
