@@ -11,6 +11,9 @@ from beancount.core.data import Open, Close, Custom, Transaction
 
 __version__ = '0.7.0'
 
+# re-exports
+from beancount.parser.options import get_account_types
+
 def halfcents(d):
     s = f'{d:,.03f}'
     if s[-1] == '0':
@@ -19,6 +22,23 @@ def halfcents(d):
 
 def is_account_account(account):
     return account.startswith('Assets:') or account.startswith('Liabilities:')
+
+def is_account_type(account_type, account_name):
+    """Predicate on account type.
+    Slightly more flexible than `beancount.core.account_type.is_account_type`.
+
+    Warning: No check is made on the validity of the account type. This merely
+    returns whether the root account name matches the given account type(s).
+
+    Args:
+      account_type: A string, the prefix type of the account. Can also be a tuple.
+      account_name: A string, the name of the account whose type is to return.
+    Returns:
+      A boolean, true if the account is of the given type.
+    """
+    if isinstance(account_type, str):
+        return account_name.startswith(account_type + acctops.sep)
+    return account_name.startswith(tuple(atype + acctops.sep for atype in account_type))
 
 @contextlib.contextmanager
 def _add_files(addl_files):

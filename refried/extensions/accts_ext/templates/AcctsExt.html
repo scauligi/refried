@@ -1,96 +1,115 @@
-{% import 'macros/_account_macros.html' as account_macros with context %}
-{% import "_charts.html" as charts with context %}
-
 {% set infotext = {
     'green':  "The last balance check is passing.",
     'red':    "The last balance check is failing.",
     'yellow': "The last balance check has not been updated in a while.",
 } %}
 
+
+{% macro indicator(ledger, account) %}
+{% set status, last_balance = extension.account_uptodate_status(account) %}
+{% set balance_string = ledger.accounts[account].balance_string %}
+{% set last_balance_activity = (today() - last_balance).days if last_balance else 0 %}
+{% if last_balance_activity > ledger.fava_options.uptodate_indicator_grey_lookback_days %}
+  {% set status = "yellow" %}
+{% endif %}
+<copyable-text class="status-indicator status-{{ status }}" title="{{ infotext[status] }} ({{ last_balance_activity }} day(s) ago)
+
+Click to copy the balance directives to the clipboard:
+
+{{ balance_string }}" data-clipboard-text="{{ balance_string }}"></copyable-text>
+{% endmacro %}
+
+
+{% macro account_name(ledger, account_name, last_segment=False) -%}
+<a href="{{ url_for('account', name=account_name) }}" class="account">
+  {{- extension.aname(account_name) -}}
+</a>
+{%- if ledger.accounts[account_name].uptodate_status %}
+
+{{ indicator(ledger, account_name) }}
+{% endif %}
+{% endmacro %}
+
 <style>
 .tree-table .balance.negative {
   color: var(--budget-negative);
-  font-weight: bold;
 }
 
 .tree-table .balance.positive {
   color: var(--budget-positive);
-  font-weight: bold;
+}
+
+.working {
+  font-weight: 500;
 }
 </style>
 
-{% set roots = extension.make_table() %}
-{% set wrows = extension.wrows %}
-{% set crows = extension.crows %}
-{% set trows = extension.trows %}
+<svelte-component type="charts"><script type="application/json">{{
+  [
+    chart_api.net_worth(),
+    chart_api.hierarchy(ledger.options['name_assets']),
+    chart_api.hierarchy(ledger.options['name_liabilities']),
+  ]|tojson
+}}</script></svelte-component>
 
-{{ charts.net_worth(g.interval) }}
-{{ charts.hierarchy(ledger.options['name_assets']) }}
-{{ charts.hierarchy(ledger.options['name_liabilities']) }}
-<script type="application/json" id="chart-data">{{ charts.chart_data|tojson|safe }}</script>
 
-<div class="row">{% for root in roots %}<div class="column">
-    <ol is="tree-table" class="flex-table tree-table">
-        <li class="head">
-            <p>
-            <span class="account-cell"><button type="button" class="link expand-all hidden" title="{{ _('Expand all accounts') }}">{{ _('Expand all') }}</button></span>
-            <span class="num">Working</span>
-            <span class="num">Cleared</span>
-            <span class="num">Total</span>
-            </p>
-        </li>
-{% for account in [root] if extension._is_open(account) recursive %}
-    <li{{ ' class=toggled' if account.account|collapse_account else '' }}>
-        <p>
-        <span class="account-cell depth-{{ loop.depth0 }} droptarget
-        {{- '' if not account|length else ' has-children'}}
-        " data-account-name="{{ account.account }}">
-            {% if account|length %}<span class="expander"></span>{% endif %}
-            <a href="{{ url_for('extension_report', report_name='JournalExt', account_name=account.account) }}" class="account">
-              {{ extension._name(account) }}
-            </a>
-            {% if account.account and ledger.accounts[account.account].meta.get('fava-uptodate-indication') %}
-              {% set status, last_balance = extension.account_uptodate_status(account.account) %}
-              {% set balance=account_macros.balance_directive(ledger, account.account) %}
-              {% set last_balance_activity = (today() - last_balance).days if last_balance else 0 %}
-              {% if last_balance_activity > ledger.fava_options['uptodate-indicator-grey-lookback-days'] %}
-                {% set status = "yellow" %}
-              {% endif %}
-              <copyable-text class="status-indicator status-{{ status }}" title="{{ infotext[status] }} ({{ last_balance_activity }} days ago)
+{% set table = extension.make_table2() %}
 
-              Click to copy the balance directives to the clipboard:
-
-              {{ balance }}" data-clipboard-text="{{ balance }}"></copyable-text>
-            {% endif %}
-            </span>
-            {% for xrows in (wrows, crows, trows) %}
-              {% set amounts = extension._row(xrows, account) %}
-              <span class="num {{ 'has-balance' if amounts else '' }}">
-                {% for amount in amounts %}
-                  {% set num = amount.number %}
-                  <span class="balance {{ 'negative' if num < 0 else 'positive' if num > 0 else '' }}">
-                    <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
-                      {{ amount.number | format_currency(amount.currency) }}
-                      {{ amount.currency if amount.currency != "USD" else "" }}
-                    <!-- </a> -->
-                  </span>
-                {% endfor %}
-                {% for amount in extension._row_children(xrows, account) %}
-                  <span class="balance-children">
-                    <!-- <a href="{{ url_for('account', name=account.account, filter='#rebudget') }}"> -->
-                      {{ amount.number | format_currency(amount.currency, show_if_zero=True) }}
-                      {{ amount.currency if amount.currency != "USD" else "" }}
-                    <!-- </a> -->
-                  </span>
-                {% endfor %}
-              </span>
-            {% endfor %}
-    </p>
-    <ol>
-    {{ loop(extension._sort_subtree(account)) }}
-    </ol>
+{% macro acct_tree(root) %}
+<tree-table>
+  <ol class="flex-table tree-table" title="{{ _('Hold Shift while clicking to expand all children.\nHold Ctrl or Cmd while clicking to expand one level.') }}">
+    <li class="head">
+      <p>
+      <span class="account-cell"><button type="button" class="link expand-all hidden" title="{{ _('Expand all accounts') }}">{{ _('Expand all') }}</button></span>
+      <span class="num">Total</span>
+      <span class="num">Cleared</span>
+      <span class="num">Working</span>
+      </p>
     </li>
-{% endfor %}
-</div>{% endfor %}</div>
-    </ol>
-    <br />
+    {% set currency = ledger.options.operating_currency[0] %}
+    {% set end_date = g.filtered.end_date %}
+    {% for account, (_, children) in [(root, extension.tree(root))] recursive %}
+    {% set acct = table[account] %}
+    <li{{ ' class=toggled' if account.name|collapse_account else '' }}>
+      <p>
+      <span class="account-cell depth-{{ loop.depth0 }} droptarget{{ ' has-children' if children else '' }}" data-account-name="{{ account }}">
+        {{ account_name(ledger, account, last_segment=True) }}
+      </span>
+      {% for type in ("total", "cleared", "working") %}
+        {% set balance = (acct[type]|cost_or_value(end_date)).amounts()|list %}
+        {% set balance_children = (acct.children[type]|cost_or_value(end_date)).amounts() %}
+        <span class="num{{ ' has-balance' if balance|length else '' }}">
+          {% for amount in balance %}
+            {% set num = amount.number %}
+            <span class="balance{{ ' positive' if num > 0 else ' negative' if num < 0 else '' }} {{ type }}">
+              {{ amount.number | format_currency(amount.currency) }}
+              {{ amount.currency if amount.currency != currency else "" }}
+            </span>
+          {% endfor %}
+          {% for amount in extension.show_if_zero(balance_children) %}
+            {% set num = amount.number %}
+            <span class="balance-children">
+              {{ amount.number | format_currency(amount.currency, show_if_zero=True) }}
+              {{ amount.currency if amount.currency != currency else "" }}
+            </span>
+          {% endfor %}
+        </span>
+      {% endfor %}
+      </p>
+      {% if children %}
+  <ol>{{- loop(children.items()) -}} </ol>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</tree-table>
+{% endmacro %}
+
+<div class="row">
+  <div class="column">
+    {{ acct_tree(ledger.options['name_assets']) }}
+  </div>
+  <div class="column">
+    {{ acct_tree(ledger.options['name_liabilities']) }}
+  </div>
+</div>
