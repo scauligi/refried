@@ -12,6 +12,7 @@ from beancount.core.number import ZERO
 from beancount.core.inventory import Inventory
 from beancount.query import query
 
+from fava.context import g
 from fava.core.tree import Tree
 from fava.ext import FavaExtensionBase
 from fava.template_filters import cost_or_value
@@ -29,21 +30,21 @@ class JournalExt(FavaExtensionBase):  # pragma: no cover
     def _wct(self, account_name):
         if not account_name:
             account_name = '^(Assets:|Liabilities:)'
-        _, wrow = query.run_query(self.ledger.entries, self.ledger.options, '''
+        _, wrow = query.run_query(self.ledger.all_entries, self.ledger.options, '''
             select number(only("USD", sum(position)))
                 where account = "{}"
                     and (meta('_cleared') = True or number < 0)
                 ''', account_name)
         if not wrow:
             wrow = [[Decimal()]]
-        _, crow = query.run_query(self.ledger.entries, self.ledger.options, '''
+        _, crow = query.run_query(self.ledger.all_entries, self.ledger.options, '''
             select number(only("USD", sum(position)))
                 where account = "{}"
                     and (meta('_cleared') = True)
                 ''', account_name)
         if not crow:
             crow = [[Decimal()]]
-        _, trow = query.run_query(self.ledger.entries, self.ledger.options, '''
+        _, trow = query.run_query(self.ledger.all_entries, self.ledger.options, '''
             select number(only("USD", sum(position)))
                 where account = "{}"
                 ''', account_name)
@@ -52,19 +53,53 @@ class JournalExt(FavaExtensionBase):  # pragma: no cover
         return wrow[0][0], crow[0][0], trow[0][0]
 
     def _get_entries(self, account_name):
-        wjc = self.ledger.fava_options['account-journal-include-children']
+        wjc = self.ledger.fava_options.account_journal_include_children
         if account_name:
             entries = self.ledger.account_journal(
+                g.filtered,
                 account_name,
                 with_journal_children=wjc)
         else:
             entries = self.ledger.account_journal(
+                g.filtered,
                 'Assets',
                 with_journal_children=wjc)
-            entries += self.ledger.account_journal(
+            entries = list(entries)
+            entries.extend(self.ledger.account_journal(
+                g.filtered,
                 'Liabilities',
-                with_journal_children=wjc)
+                with_journal_children=wjc))
         return entries
+
+    @staticmethod
+    def _filter_meta(meta, indicators=False):
+        if not meta:
+            return []
+        return [
+            (key, value)
+            for key, value in meta.items()
+            if not (
+                key
+                in (
+                    "filename",
+                    "lineno",
+                    "_cleared",
+                    *(
+                        ("date",)
+                        if indicators
+                        else ()
+                    ),
+                )
+                or key.startswith((
+                    "__",
+                    *(
+                        ("ofx_", "n26_")
+                        if indicators
+                        else ()
+                    ),
+                ))
+            )
+        ]
 
     @staticmethod
     def _flag_for_account(entry, account_name):
@@ -135,7 +170,7 @@ class JournalExt(FavaExtensionBase):  # pragma: no cover
         return 'entry-' + hash_entry(entry)
 
     def _toggleDate(self, account_name, entry_hash):
-        _, _, slice_, sha256sum = self.ledger.context(entry_hash)
+        *_, slice_, sha256sum = self.ledger.context(entry_hash)
         lines = slice_.split('\n')
         i = 1
         while i < len(lines):
