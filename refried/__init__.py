@@ -14,10 +14,12 @@ __version__ = '0.7.0'
 # re-exports
 from beancount.parser.options import get_account_types
 
-def halfcents(d):
+def halfcents(d, padded=False):
     s = f'{d:,.03f}'
     if s[-1] == '0':
         s = s[:-1]
+        if padded:
+            s += ' '
     return s
 
 def is_account_account(account):
