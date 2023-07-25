@@ -28,11 +28,11 @@ def pullfrom(entries, options_map):
             if any(entry.meta.get(key) for key in AUTOKEYS):
                 autopulls[entry.account] = parent(entry.account)
         elif isinstance(entry, Transaction):
-            new_postings = []
             for posting in entry.postings:
                 if not posting.meta:
                     continue
                 if any(key in posting.meta for key in KEYS) or posting.account in autopulls:
+                    new_postings = []
                     memo = posting.meta.get('memo', '')
                     new_acct = get_newacct(posting)
                     new_posting = posting._replace(units=-posting.units, meta=None)
