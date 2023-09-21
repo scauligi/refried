@@ -183,7 +183,7 @@ def _accounts_sorted(open_close, start=None, end=None):
         cats = filter(lambda cat: isopen(cat[1], start, end), cats)
     return sorted(cats, key=account_order)
 
-def walk(open_close, root, start=None, end=None):
+def walk(open_close, root, start=None, end=None, patterns=None):
     """A generator that yields accounts/groups in preorder... order.
     Respects `ordering:` metadata, otherwise asciibetic by account name.
 
@@ -192,11 +192,17 @@ def walk(open_close, root, start=None, end=None):
       root: The account string of the root node to start from.
       start: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
       end: (optional) Limits accounts to those that are `refried.isopen()` during this time frame.
+      patterns: a list of regex patterns to filter accounts by.
     Yields:
       Tuples (account string, Open/Custom directive) in preorder traversal.
     """
     accts = _accounts_sorted(open_close, start, end)
     accts = filter(lambda cat: cat[0].startswith(root), accts)
+    if patterns:
+        accts = filter(
+            lambda cat: any(re.search(patt, cat[0], re.I) for patt in patterns),
+            accts,
+        )
     seen = set()
     for a, (o, _) in accts:
         for parent in _reverse_parents(acctops.parent(a)):
