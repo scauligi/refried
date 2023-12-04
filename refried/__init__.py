@@ -249,8 +249,8 @@ class Period:
 
     @staticmethod
     def from_str(s):
-        """Expects string in the form "{year}-{month}"."""
-        year, month = (int(n) for n in s.split('-'))
+        """Expects string in the form "{year}-{month}[-{day}]"."""
+        year, month, *_ = (int(n) for n in s.split('-', maxsplit=2))
         return Period(year, month)
 
     @staticmethod
