@@ -1,8 +1,13 @@
-[profile]
+[project]
 name = "beancount-refried"
-version = "0.7.0"
+version = "0.8.0"
 description = "A collection of plugins and scripts for beancount and fava for monthly budgeting."
-license = "GPL-3.0-or-later"
-authors = ["scauligi"]
+license = {text="GPL-3.0-or-later"}
+authors = [{name="scauligi", email="scauligi@gmail.com"}]
 readme = "README.md"
-repository = "https://github.com/scauligi/refried"
+
+[project.urls]
+Repository = "https://github.com/scauligi/refried"
+
+[project.scripts]
+rf-hello = "refried.scripts.hello:main"
