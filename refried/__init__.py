@@ -7,7 +7,9 @@ from collections import defaultdict as ddict, OrderedDict
 from pathlib import Path
 from beancount import loader
 from beancount.core import account as acctops
+from beancount.core.account_types import get_account_type
 from beancount.core.data import Open, Close, Custom, Transaction
+from beancount.parser.options import get_account_types
 
 __version__ = '0.7.0'
 
@@ -22,8 +24,10 @@ def halfcents(d, padded=False):
             s += ' '
     return s
 
-def is_account_account(account):
-    return account.startswith('Assets:') or account.startswith('Liabilities:')
+def is_account_account(account, options_map):
+    account_types = get_account_types(options_map)
+    account_type = get_account_type(account)
+    return account_type in (account_types.assets, account_types.liabilities)
 
 def is_account_type(account_type, account_name):
     """Predicate on account type.

@@ -16,7 +16,7 @@ def clearing(entries, options_map):
                 if not posting.meta:
                     posting = posting._replace(meta={})
                     entry.postings[i] = posting
-                if not is_account_account(posting.account):
+                if not is_account_account(posting.account, options_map):
                     if 'uncleared' in posting.meta:
                         del posting.meta['uncleared']
                     continue
