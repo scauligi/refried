@@ -1,9 +1,3 @@
-"""Portfolio list extension for Fava.
-
-This is a simple example of Fava's extension reports system.
-"""
-import re
-
 from beancount.core import convert
 from beancount.core.data import Open
 from beancount.core.number import Decimal, ZERO
@@ -15,45 +9,48 @@ from beancount.query import query
 
 from fava.core.tree import Tree
 from fava.ext import FavaExtensionBase
-from fava.template_filters import cost_or_value
 
-from refried import filter_postings, _reverse_parents
+import refried
+from refried import filter_postings, _reverse_parents, Period
 
 import datetime
 from collections import defaultdict as ddict
 
 
 class AvailExt(FavaExtensionBase):  # pragma: no cover
-    """Sample Extension Report that just prints out an Portfolio List.
-    """
-
     report_title = "Budget"
 
     def make_table(self, period):
         """An account tree based on matching regex patterns."""
-        root = [
-            self.ledger.all_root_account.get('Income'),
-            self.ledger.all_root_account.get('Expenses'),
-        ]
-
         today = datetime.date.today()
 
         if period is not None:
-            year, month = (int(n) for n in period.split('-', 1))
+            period = Period.from_str(period)
         else:
-            year = today.year
-            month = today.month
-            period = f'{year:04}-{month:02}'
+            period = Period.from_date(today)
 
+        self.account_types = refried.get_account_types(self.ledger.options)
         self.open_close_map = getters.get_account_open_close(self.ledger.all_entries)
+
+        self.tree = {}
+        def slurp(tree):
+            for k, (_, v) in list(tree.items()):
+                self.tree[k] = v
+                slurp(v)
+        slurp(refried.tree(self.open_close_map, start=period))
+        root = [
+            self.account_types.income,
+            self.account_types.expenses,
+        ]
+
 
         # self.period_start = self.ledger._date_first
         # self.period_end = self.ledger._date_last
-        self.period_start = datetime.date(year, month, 1)
-        self.period_end = datetime.date(year+month//12, month%12+1, 1)
+        self.period_start = period.asdate()
+        self.period_end = period.add(1).asdate()
 
         endtoday = self.period_end
-        if today.year == self.period_start.year and today.month == self.period_start.month:
+        if Period.from_date(today) == period:
             endtoday = today + datetime.timedelta(days=1)
 
         self.brows = ddict(Inventory)
@@ -80,7 +77,7 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
             if entry.date < endtoday:
                 midrows[posting.account].add_position(posting)
 
-        return root, period
+        return root, str(period)
 
     def format_currency(self, value, currency = None, show_if_zero = False):
         if not value and not show_if_zero:
@@ -107,8 +104,8 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
         return tuple(map(_ordermap, _reverse_parents(a.account)))
 
     def _name(self, a):
-        meta = self.ledger.accounts[a.account].meta
-        return meta.get('name', a.account)
+        meta = self.ledger.accounts[a].meta
+        return meta.get('name', a)
 
     def _sort_subtree(self, root):
         children = list(root.values())
@@ -132,23 +129,27 @@ class AvailExt(FavaExtensionBase):  # pragma: no cover
         return [pos.units for pos in inventory.get_positions()]
 
     def _row(self, rows, a):
-        if isinstance(a, RealAccount):
-            a = a.account
         d: Inventory = rows.get(a)
         return [-amt for amt in self._many_positions(d)]
 
     def _row_children(self, rows, a):
         sum = Inventory()
         for sub in rows:
-            if sub.startswith(a.account):
+            if sub.startswith(a):
                 sum.add_inventory(rows.get(sub, Inventory()))
         amts = [-amt for amt in self._many_positions(sum.reduce(convert.get_weight))]
         return amts if amts else [Amount(ZERO, "USD")]
 
     def _has_children(self, a):
-        return sum(self._is_open(c) for c in a.values())
+        # return sum(self._is_open(c) for c in a.values())
+        return bool(self.tree[a])
+
+    def _children(self, a):
+        return list(self.tree[a].keys())
 
     def _is_open(self, a):
+        if not a:
+            return False
         open, close = self.open_close_map.get(a.account, (None, None))
         return (open is None or open.date < self.period_end) and (close is None or close.date > self.period_start)
 

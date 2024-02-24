@@ -29,7 +29,7 @@ def pullfrom(entries, options_map):
                 autopulls[entry.account] = parent(entry.account)
         elif isinstance(entry, Transaction):
             for posting in entry.postings:
-                if not posting.meta:
+                if posting.meta is None:
                     continue
                 if any(key in posting.meta for key in KEYS) or posting.account in autopulls:
                     new_postings = []

@@ -146,12 +146,15 @@ def isopen(open_close_entry, start, end=None):
     """
     open, close = open_close_entry
     assert open is not None
-    if isinstance(start, Period):
-        start = start.asdate()
     if end is None:
-        end = start + datetime.timedelta(days=1)
+        if isinstance(start, Period):
+            end = start.add(1).asdate()
+        else:
+            end = start + datetime.timedelta(days=1)
     elif isinstance(end, Period):
         end = end.asdate()
+    if isinstance(start, Period):
+        start = start.asdate()
     if open.date >= end:
         return False
     if close is None:

@@ -1,57 +1,108 @@
 {% import 'macros/_account_macros.html' as account_macros with context %}
-{% import "_tree_table.html" as treetable with context %}
 
 <style>
-.tree-table .balance.negative {
-  color: var(--budget-negative);
-  font-weight: bold;
-}
+// .tree-table .balance.negative {
+//   color: var(--budget-negative);
+//   font-weight: bold;
+// }
+// 
+// .tree-table .balance.positive {
+//   color: var(--budget-positive);
+//   font-weight: bold;
+// }
+// 
+// .tree-table .available {
+//   border-radius: 25px;
+// }
+// 
+// .tree-table .available.balance-children {
+//   padding-right: 0.7em;
+// }
+// 
+// .tree-table .available.negative {
+//   padding-left: 0.7em;
+//   padding-right: 0.7em;
+//   padding-top: 2px;
+//   padding-bottom: 2px;
+//   background-color: var(--budget-negative);
+//   color: white;
+//   font-weight: bold;
+// }
+// 
+// .tree-table .available.positive {
+//   padding-left: 0.7em;
+//   padding-right: 0.7em;
+//   padding-top: 2px;
+//   padding-bottom: 2px;
+//   background-color: var(--budget-positive);
+//   color: white;
+//   font-weight: bold;
+// }
+// 
+// .tree-table .row-1 span {
+//   background-color: #eee;
+// }
+// .tree-table .group-row span {
+//   background-color: #def;
+// }
+// .tree-table .group-row .account-cell.depth-0 {
+//   font-weight: bold;
+// }
+// .tree-table .group-row .account-cell.depth-1 {
+//   font-weight: bold;
+// }
 
-.tree-table .balance.positive {
-  color: var(--budget-positive);
-  font-weight: bold;
-}
+  button {
+    position: absolute;
+    padding: 0 3px;
+    color: var(--treetable-expander);
+  }
 
-.tree-table .available {
-  border-radius: 25px;
-}
+  a {
+    margin-left: 1em;
+  }
 
-.tree-table .available.balance-children {
-  padding-right: 0.7em;
-}
+  span {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: calc(14em - var(--account-indent, 0em));
+    max-width: calc(30em - var(--account-indent, 0em));
+    margin-left: var(--account-indent, 0);
+  }
 
-.tree-table .available.negative {
-  padding-left: 0.7em;
-  padding-right: 0.7em;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  background-color: var(--budget-negative);
-  color: white;
-  font-weight: bold;
-}
+  /* Indent each level of account by one more 1em. */
+  :global(ol ol) span {
+    --account-indent: 1em;
+  }
 
-.tree-table .available.positive {
-  padding-left: 0.7em;
-  padding-right: 0.7em;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  background-color: var(--budget-positive);
-  color: white;
-  font-weight: bold;
-}
+  :global(ol ol ol) span {
+    --account-indent: 2em;
+  }
 
-.tree-table .row-1 span {
-  background-color: #eee;
-}
-.tree-table .group-row span {
-  background-color: #def;
-}
-.tree-table .group-row .account-cell.depth-0 {
-  font-weight: bold;
-}
-.tree-table .group-row .account-cell.depth-1 {
-  font-weight: bold;
-}
+  :global(ol ol ol ol) span {
+    --account-indent: 3em;
+  }
+
+  :global(ol ol ol ol ol) span {
+    --account-indent: 4em;
+  }
+
+  :global(ol ol ol ol ol ol) span {
+    --account-indent: 5em;
+  }
+
+  :global(ol ol ol ol ol ol ol) span {
+    --account-indent: 6em;
+  }
+
+  :global(ol ol ol ol ol ol ol ol) span {
+    --account-indent: 7em;
+  }
+
+  :global(ol ol ol ol ol ol ol ol ol) span {
+    --account-indent: 8em;
+  }
 </style>
 
 {% set root, period = extension.make_table(request.args.get('period')) %}
@@ -60,11 +111,11 @@
 {% set vrows = extension.midvrows %}
 <h2>Budget: {{ extension._date_range() }}</h2>
 <h3>
-  <a href="{{ url_for("extension_report", report_name="AvailExt", period=extension._prev_month()) }}">&lt;&lt;</a> |
-  <a href="{{ url_for("extension_report", report_name="AvailExt", period=extension._period_for(today())) }}">Current period</a> |
-  <a href="{{ url_for("extension_report", report_name="AvailExt", period=extension._next_month()) }}">&gt;&gt;</a>
+  <a href="{{ url_for("extension_report", extension_name="AvailExt", period=extension._prev_month()) }}">&lt;&lt;</a> |
+  <a href="{{ url_for("extension_report", extension_name="AvailExt", period=extension._period_for(today())) }}">Current period</a> |
+  <a href="{{ url_for("extension_report", extension_name="AvailExt", period=extension._next_month()) }}">&gt;&gt;</a>
 </h3>
-    <ol is="tree-table" class="flex-table tree-table">
+    <ol class="flex-table tree-table">
         <li class="head">
             <p>
             <span class="account-cell"><button type="button" class="link expand-all hidden" title="{{ _('Expand all accounts') }}">{{ _('Expand all') }}</button></span>
@@ -74,34 +125,32 @@
             </p>
         </li>
 {% set ns = namespace(rown=1) %}
-{% for account in root if extension._is_open(account) recursive %}
-  {% set ns.rown = 1 if extension._has_children(account) else 1 - ns.rown %}
-    <li{{ ' class=toggled' if account.account|collapse_account else '' }}>
-      <p class="row-{{ns.rown}}
-         {{- ' group-row' if extension._has_children(account) else '' -}}"
-         {%- if loop.depth0 == 0 %} style="margin-top: 10px;"{% endif %}>
+{% for aname in root recursive %}
+  {% set ns.rown = 1 if extension._has_children(aname) else 1 - ns.rown %}
+    <li{{ ' class=toggled' if False else '' }}>
+      <p>
         <span class="account-cell depth-{{ loop.depth0 }} droptarget
-        {{- '' if not extension._has_children(account) else ' has-children'}}
-        " data-account-name="{{ account.account }}">
-            {% if extension._has_children(account) %}<span class="expander"></span>{% endif %}
-            <a href="{{ url_for('account', name=account.account, time=period) }}" class="account">
-              {{ extension._name(account) }}
+        {{- '' if not extension._has_children(aname) else ' has-children'}}
+        " data-account-name="{{ aname }}">
+            {% if extension._has_children(aname) %}<span class="expander"></span>{% endif %}
+            <a href="{{ url_for('account', name=aname, time=period) }}" class="account">
+              {{ extension._name(aname) }}
             </a>
             </span>
-            {% set budgeteds = extension._row(brows, account) %}
-            {% set spents = extension._row(srows, account) %}
-            {% set availables = extension._row(vrows, account) %}
+            {% set budgeteds = extension._row(brows, aname) %}
+            {% set spents = extension._row(srows, aname) %}
+            {% set availables = extension._row(vrows, aname) %}
             <span class="num {{ 'has-balance' if budgeteds else '' }}">
               {% for budgeted in budgeteds %}
                 <span class="balance {{ 'negative' if budgeted.number < 0 else 'positive' if budgeted.number > 0 else '' }}">
-                  <a href="{{ url_for('account', name=account.account, time=period, filter='#rebudget') }}">
+                  <a href="{{ url_for('account', name=aname, time=period, filter='#rebudget') }}">
                     {{ extension.format_amount(budgeted) }}
                   </a>
                 </span>
               {% endfor %}
-              {% for budgeted in extension._row_children(brows, account) %}
+              {% for budgeted in extension._row_children(brows, aname) %}
                 <span class="balance-children">
-                  <a href="{{ url_for('account', name=account.account, time=period, filter='#rebudget') }}">
+                  <a href="{{ url_for('account', name=aname, time=period, filter='#rebudget') }}">
                     {{ extension.format_amount(budgeted, show_if_zero=True) }}
                   </a>
                 </span>
@@ -110,14 +159,14 @@
             <span class="num {{ 'has-balance' if spents else '' }}">
               {% for spent in spents %}
                 <span class="balance {{ 'negative' if spent.number < 0 else 'positive' if spent.number > 0 else '' }}">
-                  <a href="{{ url_for('account', name=account.account, time=period, filter='-#rebudget') }}">
+                  <a href="{{ url_for('account', name=aname, time=period, filter='-#rebudget') }}">
                     {{ extension.format_amount(spent) }}
                   </a>
                 </span>
               {% endfor %}
-              {% for spent in extension._row_children(srows, account) %}
+              {% for spent in extension._row_children(srows, aname) %}
                 <span class="balance-children">
-                  <a href="{{ url_for('account', name=account.account, time=period, filter='-#rebudget') }}">
+                  <a href="{{ url_for('account', name=aname, time=period, filter='-#rebudget') }}">
                     {{ extension.format_amount(spent, show_if_zero=True) }}
                   </a>
                 </span>
@@ -131,7 +180,7 @@
                   </span>
                 </span>
               {% endfor %}
-              {% for available in extension._row_children(vrows, account) %}
+              {% for available in extension._row_children(vrows, aname) %}
                 <span class="balance-children available">
                   {{ extension.format_amount(available, show_if_zero=True) }}
                 </span>
@@ -139,7 +188,7 @@
             </span>
       </p>
     <ol>
-    {{ loop(extension._sort_subtree(account)) }}
+    {{ loop(extension._children(aname)) }}
     </ol>
     </li>
 {% endfor %}

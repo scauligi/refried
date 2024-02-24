@@ -39,12 +39,14 @@ def balance_check(entries, options_map):
                 asum.add_position(posting)
             elif components[0] in ('Income', 'Expenses'):
                 bsum.add_position(posting)
-    csum = asum.reduce(convert.get_weight) + bsum.reduce(convert.get_weight)
+    asum = asum.reduce(convert.get_weight)
+    bsum = bsum.reduce(convert.get_weight)
+    csum = asum + bsum
     if not csum.is_small(interpolate.infer_tolerances({}, options_map)):
         errors.append(
             BudgetBalanceError(
                 {'filename': '<budget_balance_check>',
                  'lineno': 0},
-                f"On-budget accounts and budget total do not match: {asum} vs {-bsum}",
+                f"On-budget accounts and budget total do not match: {asum} vs {-bsum} -- difference of {csum}",
                 None))
     return entries, errors

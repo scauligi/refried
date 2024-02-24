@@ -22,6 +22,8 @@ the root of the repository:
 pip install -e .
 ```
 
+The Fava extensions are currently tested against fava v1.26.1; you may have errors when using other versions.
+
 ## Quick start
 
 Enable the `rebudget` beancount plugin and the `avail_ext` fava extension
