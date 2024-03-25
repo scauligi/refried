@@ -130,7 +130,7 @@ def aname(open_close, a, prefix=''):
     if a not in open_close:
         rest = components[-1]
     else:
-        rest = open_close[a][0].meta.get('name', components[-1])
+        rest = open_close[a][0].meta.get('name', components[-1]).replace('-', ' ')
     return start + rest
 
 def isopen(open_close_entry, start, end=None):
