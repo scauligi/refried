@@ -25,11 +25,13 @@ def conversions(entries, options_map):
             'convert_at' in posting.meta for posting in entry.postings
         ):
             conversion_account = None
+            conversion_meta = {}
             postings = []
             inv = Inventory()
             for posting in entry.postings:
                 if posting.meta.get('__automatic__'):
                     conversion_account = posting.account
+                    conversion_meta = posting.meta
                 elif price := (
                     posting.meta.get('convert_at') or entry.meta.get('convert_at')
                 ):
@@ -37,7 +39,7 @@ def conversions(entries, options_map):
                     num = -posting.units.number * price.number
                     num = options_map['dcontext'].quantize(num, price.currency)
                     units = Amount(num, price.currency)
-                    new_posting = Posting(posting.account, units, None, None, None, {})
+                    new_posting = Posting(posting.account, units, None, None, None, posting.meta)
                     inv.add_position(new_posting)
                     postings.extend((posting, new_posting))
                 else:
@@ -46,7 +48,7 @@ def conversions(entries, options_map):
                 for position in inv:
                     postings.append(
                         Posting(
-                            conversion_account, -position.units, None, None, None, {}
+                            conversion_account, -position.units, None, None, None, conversion_meta
                         )
                     )
             entry = entry._replace(postings=postings)
