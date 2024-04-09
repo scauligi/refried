@@ -126,12 +126,11 @@ def aname(open_close, a, prefix=''):
       The associated name for the account.
     """
     components = acctops.split(a)
-    start = prefix * (len(components) - 1)
-    if a not in open_close:
-        rest = components[-1]
-    else:
-        rest = open_close[a][0].meta.get('name', components[-1]).replace('-', ' ')
-    return start + rest
+    indent = prefix * (len(components) - 1)
+    name = components[-1].replace('-', ' ')
+    if a in open_close:
+        name = open_close[a][0].meta.get('name', name)
+    return indent + name
 
 def isopen(open_close_entry, start, end=None):
     """A predicate for whether an account is open during a given time frame.
