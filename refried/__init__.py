@@ -132,7 +132,7 @@ def aname(open_close, a, prefix=''):
         name = open_close[a][0].meta.get('name', name)
     return indent + name
 
-def isopen(open_close_entry, start, end=None):
+def isopen(open_close_entry, start=None, end=None):
     """A predicate for whether an account is open during a given time frame.
 
     Args:
@@ -145,20 +145,13 @@ def isopen(open_close_entry, start, end=None):
     """
     open, close = open_close_entry
     assert open is not None
-    if end is None:
-        if isinstance(start, Period):
-            end = start.add(1).asdate()
-        else:
-            end = start + datetime.timedelta(days=1)
-    elif isinstance(end, Period):
+    if isinstance(end, Period):
         end = end.asdate()
     if isinstance(start, Period):
         start = start.asdate()
-    if open.date >= end:
+    if end and open.date >= end:
         return False
-    if close is None:
-        return True
-    if close.date <= start:
+    if start and close and close.date <= start:
         return False
     return True
 
